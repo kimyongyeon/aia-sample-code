@@ -153,26 +153,120 @@ await loadComponent("user-profile", "./templates/user-card.html", {
 - **컴포넌트 라이프사이클**: 로드/언로드 이벤트 처리
 - **의존성 관리**: 컴포넌트 간 의존성 자동 해결
 
+# 스크립트에서 responseData 받기
+
+```javascript
 <script>
   (function(responseData) {
     // 1. 전체 데이터 접근
     console.log(responseData);
-    
+
     // 2. 특정 데이터 접근
     console.log(responseData.user.name);
-    
+
     // 3. 조건문 사용
     if (responseData.isLoggedIn) {
       // 로그인 관련 로직
     }
-    
+
     // 4. 배열 처리
     responseData.user.hobbies.forEach(function(hobby) {
       // 각 취미 처리
     });
-    
+
     // 5. DOM 조작
     document.body.className = responseData.theme;
-    
+
   })(responseData);
 </script>
+```
+
+# 동적 화면 교체
+
+```javascript
+<div class="main-template">
+  <h2>{{title}}</h2>
+
+  <button id="loadOtherTemplate">Load Other Template</button>
+
+  <div class="dynamic-area">
+    <!-- 이 위치에 다른 템플릿 로드 -->
+  </div>
+
+  <script>
+    (function(responseData, replaceTemplate) {
+      // 버튼 클릭 시 다른 템플릿 로드
+      document.getElementById('loadOtherTemplate').addEventListener('click', function() {
+        replaceTemplate(
+          '.dynamic-area',        // 로드할 위치
+          'other-template.html',  // 템플릿 파일
+          {                       // 전달할 데이터
+            message: 'Loaded dynamically!',
+            user: responseData.user
+          }
+        );
+      });
+    })(responseData, replaceTemplate);
+  </script>
+</div>
+```
+
+# 고급 템플릿 예시
+
+```html
+<!-- product-template.html -->
+<div class="product-list">
+  <h2>{{title}}</h2>
+
+  <!-- 로그인 상태에 따른 UI -->
+  {{#if isLoggedIn}}
+  <p>Welcome back, {{user.name}}!</p>
+  {{else}}
+  <p>Please <a href="/login">login</a> to continue.</p>
+  {{/if}}
+
+  <!-- 상품 목록 -->
+  {{#if products.length}}
+  <div class="products">
+    {{#each products}}
+    <div class="product">
+      <h3>{{name}}</h3>
+      <p>{{description}}</p>
+      <span class="price">${{price}}</span>
+      {{#if onSale}}
+      <span class="sale-badge">Sale!</span>
+      {{/if}}
+    </div>
+    {{/each}}
+  </div>
+  <p>Total products: {{products.length}}</p>
+  {{else}}
+  <p>No products available.</p>
+  {{/if}}
+
+  <!-- 태그 목록 -->
+  <div class="tags">
+    {{#each tags}}
+    <span class="tag">{{value}}</span>
+    {{/each}}
+  </div>
+
+  <!-- 다른 템플릿 포함 -->
+  {{> footer.html}}
+
+  <script>
+    (function (responseData, replaceTemplate) {
+      console.log("Product template loaded!", responseData);
+
+      // 템플릿 교체 예시
+      if (responseData.showDetail) {
+        replaceTemplate(
+          "product-detail.html",
+          responseData.selectedProduct,
+          .product-detail-area
+        );
+      }
+    })(responseData, replaceTemplate);
+  </script>
+</div>
+```

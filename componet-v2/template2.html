@@ -1,0 +1,51 @@
+<div class="template2-container">
+  <h2>{{title}}</h2>
+  <p>{{message}}</p>
+  <p><strong>Loaded at:</strong> {{timestamp}}</p>
+  <p><strong>Previous user:</strong> {{previousUser}}</p>
+
+  <div class="actions">
+    <button id="backToTemplate1" class="btn-secondary">
+      Back to Template 1
+    </button>
+    <button id="loadAnotherTemplate2" class="btn-primary">
+      Load Another Template 2
+    </button>
+  </div>
+
+  <script>
+    (function (responseData, replaceTemplate) {
+      console.log("Template 2 loaded with data:", responseData);
+
+      // Template 1로 돌아가기
+      document
+        .getElementById("backToTemplate1")
+        .addEventListener("click", function () {
+          replaceTemplate(
+            "template1.html", // 원래 위치로 돌아감
+            {
+              userName: responseData.previousUser,
+              currentPage: "Template 1 (returned)",
+            },
+            "#targetDiv"
+          );
+        });
+
+      // 또 다른 Template 2 로드
+      document
+        .getElementById("loadAnotherTemplate2")
+        .addEventListener("click", function () {
+          replaceTemplate(
+            "template2.html",
+            {
+              title: "Another Template 2",
+              message: "This is another instance!",
+              timestamp: new Date().toLocaleString(),
+              previousUser: responseData.previousUser,
+            },
+            "#targetDiv"
+          );
+        });
+    })(responseData, replaceTemplate);
+  </script>
+</div>

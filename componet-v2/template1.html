@@ -1,0 +1,39 @@
+<div class="template-container">
+  <h2>Template 1</h2>
+  <p>This is the first template</p>
+
+  <div class="user-info">
+    <h3>User: {{userName}}</h3>
+    <p>Current page: {{currentPage}}</p>
+  </div>
+
+  <button id="loadTemplate2" class="btn-primary">Load Template 2</button>
+
+  <div class="dynamic-content">
+    <!-- 이 위치에 template2가 로드될 예정 -->
+    <p>Click the button above to load Template 2 here</p>
+  </div>
+
+  <script>
+    (function (responseData, replaceTemplate) {
+      console.log("Template 1 loaded with data:", responseData);
+
+      // 버튼 클릭 시 template2 로드
+      document
+        .getElementById("loadTemplate2")
+        .addEventListener("click", function () {
+          // 같은 위치 (.dynamic-content)에 template2 로드
+          replaceTemplate(
+            "template2.html",
+            {
+              title: "Loaded from Template 1",
+              message: "This template was loaded dynamically!",
+              timestamp: new Date().toLocaleString(),
+              previousUser: responseData.userName,
+            },
+            "#targetDiv"
+          );
+        });
+    })(responseData, replaceTemplate);
+  </script>
+</div>

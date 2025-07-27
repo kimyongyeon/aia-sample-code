@@ -8,20 +8,30 @@
   <body>
     <h1>template sample</h1>
     <div id="targetDiv"></div>
-    <script src="componentload.js"></script>
+    <script src="componentload2.js"></script>
     <script>
+      // componentLoad.load(
+      //   "template.html",
+      //   {
+      //     title: "User Profile",
+      //     user: {
+      //       name: "John Doe",
+      //       age: 28,
+      //       location: "Seoul, Korea",
+      //       hobbies: ["Reading", "Swimming", "Coding"],
+      //     },
+      //     isLoggedIn: true,
+      //     theme: "dark",
+      //   },
+      //   "#targetDiv"
+      // );
+
+      // 초기 template1 로드
       componentLoad.load(
-        "template.html",
+        "template1.html",
         {
-          title: "User Profile",
-          user: {
-            name: "John Doe",
-            age: 28,
-            location: "Seoul, Korea",
-            hobbies: ["Reading", "Swimming", "Coding"],
-          },
-          isLoggedIn: true,
-          theme: "dark",
+          userName: "John Doe",
+          currentPage: "Template 1",
         },
         "#targetDiv"
       );
