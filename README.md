@@ -3,8 +3,8 @@
 ## 개요
 
 `componentLoader.js`는 동적으로 HTML 템플릿을 로드하고 데이터를 바인딩하여 DOM
-요소에 렌더링하는 유틸리티 모듈입니다. 이 모듈은 컴포넌트 기반 웹 애플리케이션
-개발을 위한 간단하고 효율적인 솔루션을 제공합니다.
+요소에 렌더링하는 유틸리티 모듈입니다. 이 모듈은 컴포넌트 기반 웹 애플리케이션개
+발을 위한 간단하고 효율적인 솔루션을 제공합니다.
 
 ## 주요 기능
 
@@ -109,8 +109,8 @@ await loadComponent("user-profile", "./templates/user-card.html", {
    기적으로 로드
 2. **데이터 바인딩**: `window.responseData`에 전달된 데이터 객체를 설정
 3. **HTML 파싱**: 임시 div 요소를 사용하여 로드된 HTML을 파싱
-4. **스크립트 추출**: 템플릿 내의 모든 `<script>` 태그를 추출하고 임시 div에서
-   제거
+4. **스크립트 추출**: 템플릿 내의 모든 `<script>` 태그를 추출하고 임시 div에서제
+   거
 5. **콘텐츠 렌더링**: 스크립트가 제거된 HTML을 대상 DOM 요소에 삽입
 6. **스크립트 실행**: 추출된 스크립트들을 대상 DOM 요소에 다시 추가하여 실행
 
@@ -153,6 +153,26 @@ await loadComponent("user-profile", "./templates/user-card.html", {
 - **컴포넌트 라이프사이클**: 로드/언로드 이벤트 처리
 - **의존성 관리**: 컴포넌트 간 의존성 자동 해결
 
-## 라이선스
-
-이 프로젝트는 MIT 라이선스 하에 배포됩니다.
+<script>
+  (function(responseData) {
+    // 1. 전체 데이터 접근
+    console.log(responseData);
+    
+    // 2. 특정 데이터 접근
+    console.log(responseData.user.name);
+    
+    // 3. 조건문 사용
+    if (responseData.isLoggedIn) {
+      // 로그인 관련 로직
+    }
+    
+    // 4. 배열 처리
+    responseData.user.hobbies.forEach(function(hobby) {
+      // 각 취미 처리
+    });
+    
+    // 5. DOM 조작
+    document.body.className = responseData.theme;
+    
+  })(responseData);
+</script>

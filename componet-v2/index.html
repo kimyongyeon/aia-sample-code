@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <h1>template sample</h1>
+    <div id="targetDiv"></div>
+    <script src="componentload.js"></script>
+    <script>
+      componentLoad.load(
+        "template.html",
+        {
+          title: "User Profile",
+          user: {
+            name: "John Doe",
+            age: 28,
+            location: "Seoul, Korea",
+            hobbies: ["Reading", "Swimming", "Coding"],
+          },
+          isLoggedIn: true,
+          theme: "dark",
+        },
+        "#targetDiv"
+      );
+    </script>
+  </body>
+</html>

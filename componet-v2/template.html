@@ -1,0 +1,49 @@
+<div class="user-component">
+  <h2>{{title}}</h2>
+  <p>Welcome, {{user.name}}!</p>
+
+  <div class="user-info">
+    <span>Age: {{user.age}}</span>
+    <span>Location: {{user.location}}</span>
+  </div>
+
+  <ul class="hobbies">
+    {{#each user.hobbies}}
+    <li>{{value}}</li>
+    {{/each}}
+  </ul>
+
+  <script>
+    // 템플릿 내 스크립트에서 responseData에 직접 접근 가능!
+    (function (responseData) {
+      console.log("Template loaded with data:", responseData);
+
+      // responseData 사용 예시
+      console.log("User name:", responseData.user.name);
+      console.log("User hobbies:", responseData.user.hobbies);
+
+      // DOM 조작도 가능
+      const userInfo = document.querySelector(".user-info");
+      userInfo.style.border = "1px solid #ccc";
+      userInfo.style.padding = "10px";
+
+      // 조건부 로직
+      if (responseData.user.age >= 18) {
+        console.log("User is an adult");
+      }
+
+      // 배열 데이터 활용
+      responseData.user.hobbies.forEach(function (hobby, index) {
+        console.log(`Hobby ${index + 1}: ${hobby}`);
+      });
+
+      // 이벤트 리스너 추가
+      const hobbies = document.querySelectorAll(".hobbies li");
+      hobbies.forEach(function (li) {
+        li.addEventListener("click", function () {
+          alert("You clicked: " + this.textContent);
+        });
+      });
+    })(responseData); // IIFE에 responseData 파라미터 전달
+  </script>
+</div>
