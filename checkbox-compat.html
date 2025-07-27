@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WebView 호환 체크박스 예제</title>
+    <style>
+      /* WebView 호환성을 위한 CSS */
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 20px;
+        background-color: #f5f5f5;
+        font-size: 14px;
+        line-height: 1.4;
+      }
+
+      .container {
+        max-width: 800px;
+        margin: 0 auto;
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      }
+
+      h1 {
+        color: #333;
+        text-align: center;
+        margin-bottom: 20px;
+        font-size: 24px;
+      }
+
+      h3 {
+        color: #555;
+        margin-bottom: 15px;
+        font-size: 18px;
+      }
+
+      .checkbox-group {
+        margin-bottom: 25px;
+        padding: 15px;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        background-color: #fafafa;
+      }
+
+      .checkbox-item {
+        /* flexbox 대신 float 사용 (구형 WebView 호환) */
+        overflow: hidden;
+        margin-bottom: 10px;
+        padding: 8px;
+        background: white;
+        border-radius: 4px;
+        border: 1px solid #e0e0e0;
+      }
+
+      .checkbox-item:hover {
+        background-color: #f0f8ff;
+        border-color: #2196f3;
+      }
+
+      .checkbox-item input[type="checkbox"] {
+        float: left;
+        margin-right: 10px;
+        margin-top: 2px;
+      }
+
+      .checkbox-item label {
+        cursor: pointer;
+        font-size: 14px;
+        display: block;
+        margin-left: 25px;
+        padding-top: 2px;
+      }
+
+      .checkbox-item.checked {
+        background-color: #e8f5e8;
+        border-left: 3px solid #4caf50;
+      }
+
+      .checkbox-item.checked label {
+        color: #2e7d32;
+        font-weight: bold;
+      }
+
+      .select-all-container {
+        background-color: #e3f2fd;
+        padding: 12px;
+        border-radius: 6px;
+        margin-bottom: 15px;
+        border-left: 3px solid #2196f3;
+      }
+
+      .select-all-container label {
+        font-weight: bold;
+        cursor: pointer;
+      }
+
+      .select-all-container input[type="checkbox"] {
+        margin-right: 8px;
+      }
+
+      .button-group {
+        text-align: center;
+        margin: 20px 0;
+      }
+
+      .button {
+        background-color: #4caf50;
+        color: white;
+        padding: 8px 16px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 13px;
+        margin: 3px;
+        /* 구형 WebView를 위한 추가 스타일 */
+        display: inline-block;
+        text-decoration: none;
+        line-height: 1.2;
+      }
+
+      .button:hover {
+        background-color: #45a049;
+      }
+
+      .button:active {
+        background-color: #3d8b40;
+      }
+
+      .button.secondary {
+        background-color: #2196f3;
+      }
+
+      .button.secondary:hover {
+        background-color: #1976d2;
+      }
+
+      .button.danger {
+        background-color: #f44336;
+      }
+
+      .button.danger:hover {
+        background-color: #d32f2f;
+      }
+
+      .result-section {
+        margin-top: 25px;
+        padding: 15px;
+        background-color: #fff3e0;
+        border-radius: 6px;
+        border-left: 3px solid #ff9800;
+      }
+
+      .result-item {
+        margin: 3px 0;
+        padding: 4px 8px;
+        background: white;
+        border-radius: 3px;
+        display: inline-block;
+        margin-right: 8px;
+        font-size: 12px;
+        border: 1px solid #ddd;
+      }
+
+      /* 구형 WebView를 위한 추가 스타일 */
+      .clearfix:after {
+        content: "";
+        display: table;
+        clear: both;
+      }
+
+      /* 터치 디바이스를 위한 스타일 */
+      @media (max-width: 768px) {
+        .container {
+          padding: 15px;
+          margin: 10px;
+        }
+
+        .checkbox-item {
+          padding: 12px;
+        }
+
+        .button {
+          padding: 10px 20px;
+          font-size: 14px;
+          margin: 5px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>WebView 호환 체크박스 예제</h1>
+
+      <!-- 전체 선택/해제 -->
+      <div class="select-all-container">
+        <label>
+          <input type="checkbox" id="selectAll" />
+          <strong>전체 선택/해제</strong>
+        </label>
+      </div>
+
+      <!-- 체크박스 그룹 -->
+      <div class="checkbox-group">
+        <h3>취미 선택</h3>
+        <div class="checkbox-item">
+          <input type="checkbox" id="reading" value="reading" />
+          <label for="reading">독서</label>
+        </div>
+        <div class="checkbox-item">
+          <input type="checkbox" id="music" value="music" />
+          <label for="music">음악 감상</label>
+        </div>
+        <div class="checkbox-item">
+          <input type="checkbox" id="sports" value="sports" />
+          <label for="sports">운동</label>
+        </div>
+        <div class="checkbox-item">
+          <input type="checkbox" id="travel" value="travel" />
+          <label for="travel">여행</label>
+        </div>
+        <div class="checkbox-item">
+          <input type="checkbox" id="cooking" value="cooking" />
+          <label for="cooking">요리</label>
+        </div>
+        <div class="checkbox-item">
+          <input type="checkbox" id="gaming" value="gaming" />
+          <label for="gaming">게임</label>
+        </div>
+      </div>
+
+      <!-- 버튼 그룹 -->
+      <div class="button-group">
+        <button class="button" id="getSelected">선택된 항목 확인</button>
+        <button class="button secondary" id="selectRandom">랜덤 선택</button>
+        <button class="button danger" id="clearAll">모두 해제</button>
+      </div>
+
+      <!-- 결과 표시 영역 -->
+      <div class="result-section">
+        <h3>선택된 항목:</h3>
+        <div id="selectedItems">
+          <p>선택된 항목이 없습니다.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- WebView 호환 스크립트 로딩 -->
+    <script src="./checkbox-compat.js"></script>
+
+    <!-- 추가 안전장치: 스크립트 로딩 실패 시 대체 초기화 -->
+    <script>
+      // 스크립트 로딩 확인 및 대체 초기화
+      (function () {
+        "use strict";
+
+        function checkScriptLoaded() {
+          if (typeof CheckboxManagerCompat === "undefined") {
+            console.warn(
+              "체크박스 관리자 스크립트가 로드되지 않았습니다. 대체 방법을 시도합니다."
+            );
+
+            // 간단한 대체 초기화
+            setTimeout(function () {
+              try {
+                var checkboxes = document.querySelectorAll(
+                  'input[type="checkbox"]'
+                );
+                for (var i = 0; i < checkboxes.length; i++) {
+                  var checkbox = checkboxes[i];
+                  checkbox.onclick = function () {
+                    var item = this.parentElement;
+                    if (this.checked) {
+                      item.className += " checked";
+                    } else {
+                      item.className = item.className.replace(" checked", "");
+                    }
+                  };
+                }
+
+                // 전체 선택/해제
+                var selectAll = document.getElementById("selectAll");
+                if (selectAll) {
+                  selectAll.onclick = function () {
+                    var checkboxes = document.querySelectorAll(
+                      'input[type="checkbox"]:not(#selectAll)'
+                    );
+                    for (var i = 0; i < checkboxes.length; i++) {
+                      checkboxes[i].checked = this.checked;
+                      checkboxes[i].onclick();
+                    }
+                  };
+                }
+
+                console.log("대체 초기화가 완료되었습니다.");
+              } catch (error) {
+                console.error("대체 초기화 실패:", error);
+              }
+            }, 1000);
+          }
+        }
+
+        // DOM 로딩 완료 후 확인
+        if (document.readyState === "loading") {
+          document.addEventListener("DOMContentLoaded", checkScriptLoaded);
+        } else {
+          setTimeout(checkScriptLoaded, 100);
+        }
+      })();
+    </script>
+  </body>
+</html>

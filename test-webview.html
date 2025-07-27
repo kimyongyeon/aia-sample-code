@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WebView 호환성 테스트</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 20px;
+        background-color: #f5f5f5;
+      }
+
+      .container {
+        max-width: 800px;
+        margin: 0 auto;
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      }
+
+      h1 {
+        color: #333;
+        text-align: center;
+        margin-bottom: 30px;
+      }
+
+      .test-section {
+        margin-bottom: 30px;
+        padding: 20px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        background-color: #fafafa;
+      }
+
+      .test-item {
+        margin-bottom: 15px;
+        padding: 10px;
+        background: white;
+        border-radius: 5px;
+        border-left: 4px solid #2196f3;
+      }
+
+      .test-item.success {
+        border-left-color: #4caf50;
+      }
+
+      .test-item.failure {
+        border-left-color: #f44336;
+      }
+
+      .test-item.warning {
+        border-left-color: #ff9800;
+      }
+
+      .test-title {
+        font-weight: bold;
+        margin-bottom: 5px;
+      }
+
+      .test-result {
+        font-size: 14px;
+        color: #666;
+      }
+
+      .test-details {
+        margin-top: 10px;
+        padding: 10px;
+        background-color: #f0f0f0;
+        border-radius: 4px;
+        font-family: monospace;
+        font-size: 12px;
+        white-space: pre-wrap;
+      }
+
+      .button {
+        background-color: #2196f3;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        margin: 5px;
+        font-size: 14px;
+      }
+
+      .button:hover {
+        background-color: #1976d2;
+      }
+
+      .button.success {
+        background-color: #4caf50;
+      }
+
+      .button.failure {
+        background-color: #f44336;
+      }
+
+      .button.warning {
+        background-color: #ff9800;
+      }
+
+      .summary {
+        margin-top: 30px;
+        padding: 20px;
+        background-color: #e3f2fd;
+        border-radius: 8px;
+        border-left: 4px solid #2196f3;
+      }
+
+      .summary h3 {
+        margin-top: 0;
+        color: #1976d2;
+      }
+
+      .progress-bar {
+        width: 100%;
+        height: 20px;
+        background-color: #e0e0e0;
+        border-radius: 10px;
+        overflow: hidden;
+        margin: 10px 0;
+      }
+
+      .progress-fill {
+        height: 100%;
+        background-color: #4caf50;
+        transition: width 0.3s ease;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>WebView 호환성 테스트</h1>
+
+      <div class="test-section">
+        <h3>JavaScript 기능 테스트</h3>
+        <div id="js-tests"></div>
+      </div>
+
+      <div class="test-section">
+        <h3>CSS 기능 테스트</h3>
+        <div id="css-tests"></div>
+      </div>
+
+      <div class="test-section">
+        <h3>DOM API 테스트</h3>
+        <div id="dom-tests"></div>
+      </div>
+
+      <div class="test-section">
+        <h3>브라우저/WebView 정보</h3>
+        <div id="browser-info"></div>
+      </div>
+
+      <div class="summary">
+        <h3>테스트 결과 요약</h3>
+        <div class="progress-bar">
+          <div class="progress-fill" id="progress-fill" style="width: 0%"></div>
+        </div>
+        <div id="test-summary"></div>
+      </div>
+
+      <div style="text-align: center; margin-top: 20px">
+        <button class="button" onclick="runAllTests()">전체 테스트 실행</button>
+        <button class="button" onclick="exportResults()">결과 내보내기</button>
+        <button class="button" onclick="clearResults()">결과 초기화</button>
+      </div>
+    </div>
+
+    <script src="./webview-utils.js"></script>
+    <script>
+      'use strict';
+
+      var testResults = {
+        total: 0,
+        passed: 0,
+        failed: 0,
+        warnings: 0
+      };
+
+      // 테스트 함수들
+      var tests = {
+        // JavaScript 기능 테스트
+        js: {
+          'Map 객체': function() {
+            return typeof Map !== 'undefined';
+          },
+          'Set 객체': function() {
+            return typeof Set !== 'undefined';
+          },
+          'Array.from': function() {
+            return typeof Array.from !== 'undefined';
+          },
+          'Arrow Functions': function() {
+            try {
+              eval('() => {}');
+              return true;
+            } catch (e) {
+              return false;
+            }
+          },
+          'Template Literals': function() {
+            try {
+              eval('`test`');
+              return true;
+            } catch (e) {
+              return false;
+            }
+          },
+          'Destructuring': function() {
+            try {
+              eval('const [a, b] = [1, 2];');
+              return true;
+            } catch (e) {
+              return false;
+            }
+          },
+          'Spread Operator': function() {
+            try {
+              eval('const arr = [...[1, 2, 3]];');
+              return true;
+            } catch (e) {
+              return false;
+            }
+          }
+        },
+
+        // CSS 기능 테스트
+        css: {
+          'Flexbox': function() {
+            var div = document.createElement('div');
+            div.style.display = 'flex';
+            return div.style.display === 'flex';
+          },
+          'Grid': function() {
+            var div = document.createElement('div');
+            div.style.display = 'grid';
+            return div.style.display === 'grid';
+          },
+          'Transform': function() {
+            var div = document.createElement('div');
+            div.style.transform = 'translateX(0)';
+            return div.style.transform !== '';
+          },
+          'Transition': function() {
+            var div = document.createElement('div');
+            div.style.transition = 'all 0.3s';
+            return div.style.transition !== '';
+          },
+          'Animation': function() {
+            var div = document.createElement('div');
+            div.style.animation = 'test 1s';
+            return div.style.animation !== '';
+          },
+          'Box Shadow': function() {
+            var div = document.createElement('div');
+            div.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';
+            return div.style.boxShadow !== '';
+          },
+          'Border Radius': function() {
+            var div = document.createElement('div');
+            div.style.borderRadius = '4px';
+            return div.style.borderRadius !== '';
+          }
+        },
+
+        // DOM API 테스트
+        dom: {
+          'querySelector': function() {
+            return typeof document.querySelector !== 'undefined';
+          },
+          'querySelectorAll': function() {
+            return typeof document.querySelectorAll !== 'undefined';
+          },
+          'addEventListener': function() {
+            return typeof addEventListener !== 'undefined';
+          },
+          'classList': function() {
+            var div = document.createElement('div');
+            return typeof div.classList !== 'undefined';
+          },
+          'dataset': function() {
+            var div = document.createElement('div');
+            return typeof div.dataset !== 'undefined';
+          },
+          'localStorage': function() {
+            return typeof localStorage !== 'undefined';
+          },
+          'sessionStorage': function() {
+            return typeof sessionStorage !== 'undefined';
+          },
+          'JSON': function() {
+            return typeof JSON !== 'undefined' && typeof JSON.parse !== 'undefined';
+          },
+          'fetch': function() {
+            return typeof fetch !== 'undefined';
+          },
+          'Promise': function() {
+            return typeof Promise !== 'undefined';
+          }
+        }
+      };
+
+      // 테스트 실행 함수
+      function runTest(category, testName, testFunc) {
+        var result = {
+          name: testName,
+          passed: false,
+          details: ''
+        };
+
+        try {
+          result.passed = testFunc();
+          result.details = result.passed ? '지원됨' : '지원되지 않음';
+        } catch (error) {
+          result.passed = false;
+          result.details = '오류 발생: ' + error.message;
+        }
+
+        return result;
+      }
+
+      // 테스트 결과 표시
+      function displayTestResult(containerId, testResult) {
+        var container = document.getElementById(containerId);
+        var testItem = document.createElement('div');
+        testItem.className = 'test-item ' + (testResult.passed ? 'success' : 'failure');
+
+        testItem.innerHTML = `
+          <div class="test-title">${testResult.name}</div>
+          <div class="test-result">${testResult.details}</div>
+          <div class="test-details">${testResult.details}</div>
+        `;
+
+        container.appendChild(testItem);
+
+        // 통계 업데이트
+        testResults.total++;
+        if (testResult.passed) {
+          testResults.passed++;
+        } else {
+          testResults.failed++;
+        }
+      }
+
+      // 브라우저 정보 표시
+      function displayBrowserInfo() {
+        var container = document.getElementById('browser-info');
+
+        try {
+          var browserInfo = WebViewUtils.detectBrowser();
+          var featureSupport = WebViewUtils.checkFeatureSupport();
+
+          var infoHtml = `
+            <div class="test-item">
+              <div class="test-title">User Agent</div>
+              <div class="test-result">${navigator.userAgent}</div>
+            </div>
+            <div class="test-item ${browserInfo.isWebView ? 'success' : 'warning'}">
+              <div class="test-title">WebView 감지</div>
+              <div class="test-result">${browserInfo.isWebView ? 'WebView로 감지됨' : '일반 브라우저로 감지됨'}</div>
+            </div>
+            <div class="test-item">
+              <div class="test-title">플랫폼</div>
+              <div class="test-result">${browserInfo.isAndroid ? 'Android' : browserInfo.isIOS ? 'iOS' : '기타'}</div>
+            </div>
+            <div class="test-item">
+              <div class="test-title">버전</div>
+              <div class="test-result">${browserInfo.version}</div>
+            </div>
+            <div class="test-item ${browserInfo.isOldWebView ? 'failure' : 'success'}">
+              <div class="test-title">구형 WebView</div>
+              <div class="test-result">${browserInfo.isOldWebView ? '구형 WebView로 감지됨' : '최신 WebView로 감지됨'}</div>
+            </div>
+          `;
+
+          container.innerHTML = infoHtml;
+
+        } catch (error) {
+          container.innerHTML = `
+            <div class="test-item failure">
+              <div class="test-title">브라우저 정보 감지 실패</div>
+              <div class="test-result">오류: ${error.message}</div>
+            </div>
+          `;
+        }
+      }
+
+      // 전체 테스트 실행
+      function runAllTests() {
+        // 결과 초기화
+        testResults = { total: 0, passed: 0, failed: 0, warnings: 0 };
+        document.getElementById('js-tests').innerHTML = '';
+        document.getElementById('css-tests').innerHTML = '';
+        document.getElementById('dom-tests').innerHTML = '';
+
+        // JavaScript 테스트
+        for (var testName in tests.js) {
+          var result = runTest('js', testName, tests.js[testName]);
+          displayTestResult('js-tests', result);
+        }
+
+        // CSS 테스트
+        for (var testName in tests.css) {
+          var result = runTest('css', testName, tests.css[testName]);
+          displayTestResult('css-tests', result);
+        }
+
+        // DOM 테스트
+        for (var testName in tests.dom) {
+          var result = runTest('dom', testName, tests.dom[testName]);
+          displayTestResult('dom-tests', result);
+        }
+
+        // 브라우저 정보 표시
+        displayBrowserInfo();
+
+        // 결과 요약 업데이트
+        updateSummary();
+      }
+
+      // 결과 요약 업데이트
+      function updateSummary() {
+        var summary = document.getElementById('test-summary');
+        var progressFill = document.getElementById('progress-fill');
+
+        var successRate = testResults.total > 0 ? (testResults.passed / testResults.total) * 100 : 0;
+
+        summary.innerHTML = `
+          <p><strong>총 테스트:</strong> ${testResults.total}개</p>
+          <p><strong>성공:</strong> ${testResults.passed}개</p>
+          <p><strong>실패:</strong> ${testResults.failed}개</p>
+          <p><strong>성공률:</strong> ${successRate.toFixed(1)}%</p>
+        `;
+
+        progressFill.style.width = successRate + '%';
+
+        if (successRate >= 80) {
+          progressFill.style.backgroundColor = '#4CAF50';
+        } else if (successRate >= 60) {
+          progressFill.style.backgroundColor = '#ff9800';
+        } else {
+          progressFill.style.backgroundColor = '#f44336';
+        }
+      }
+
+      // 결과 내보내기
+      function exportResults() {
+        var results = {
+          timestamp: new Date().toISOString(),
+          userAgent: navigator.userAgent,
+          testResults: testResults,
+          browserInfo: WebViewUtils.detectBrowser(),
+          featureSupport: WebViewUtils.checkFeatureSupport()
+        };
+
+        var dataStr = JSON.stringify(results, null, 2);
+        var dataBlob = new Blob([dataStr], {type: 'application/json'});
+
+        var link = document.createElement('a');
+        link.href = URL.createObjectURL(dataBlob);
+        link.download = 'webview-test-results.json';
+        link.click();
+      }
+
+      // 결과 초기화
+      function clearResults() {
+        testResults = { total: 0, passed: 0, failed: 0, warnings: 0 };
+        document.getElementById('js-tests').innerHTML = '';
+        document.getElementById('css-tests').innerHTML = '';
+        document.getElementById('dom-tests').innerHTML = '';
+        document.getElementById('browser-info').innerHTML = '';
+        document.getElementById('test-summary').innerHTML = '';
+        document.getElementById('progress-fill').style.width = '0%';
+      }
+
+      // 페이지 로드 시 자동 테스트 실행
+      document.addEventListener('DOMContentLoaded', function() {
+        setTimeout(runAllTests, 1000);
+      });
+    </script>
+  </body>
+</html>

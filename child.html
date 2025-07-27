@@ -1,0 +1,19 @@
+<!-- gemini-test/template.html -->
+
+<div>
+  <h1>Hello, child!</h1>
+  <button id="back">back</button>
+</div>
+
+<script>
+  (function () {
+    console.log(window.responseData);
+
+    document.querySelector("#back").addEventListener("click", () => {
+      loadComponent("root", "template.html", {
+        name: "Parent",
+        date: new Date().toLocaleDateString(),
+      });
+    });
+  })();
+</script>

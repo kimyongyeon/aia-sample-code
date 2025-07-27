@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>최신 문법 체크박스 (이벤트 위임)</title>
+    <style>
+      body {
+        font-family: "Arial", sans-serif;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+        background-color: #f5f5f5;
+      }
+      .container {
+        background: white;
+        padding: 30px;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+      h1 {
+        color: #333;
+        text-align: center;
+        margin-bottom: 30px;
+      }
+      .checkbox-group {
+        margin-bottom: 30px;
+        padding: 20px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        background-color: #fafafa;
+      }
+      .checkbox-item {
+        display: flex;
+        align-items: center;
+        margin-bottom: 15px;
+        padding: 10px;
+        background: white;
+        border-radius: 5px;
+        transition: all 0.3s ease;
+      }
+      .checkbox-item:hover {
+        background-color: #f0f8ff;
+        transform: translateX(5px);
+      }
+      .checkbox-item input[type="checkbox"] {
+        margin-right: 10px;
+        transform: scale(1.2);
+      }
+      .checkbox-item label {
+        cursor: pointer;
+        font-size: 16px;
+        flex: 1;
+      }
+      .checkbox-item.checked {
+        background-color: #e8f5e8;
+        border-left: 4px solid #4caf50;
+      }
+      .checkbox-item.checked label {
+        color: #2e7d32;
+        font-weight: bold;
+      }
+      .select-all-container {
+        background-color: #e3f2fd;
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        border-left: 4px solid #2196f3;
+      }
+      .result-section {
+        margin-top: 30px;
+        padding: 20px;
+        background-color: #fff3e0;
+        border-radius: 8px;
+        border-left: 4px solid #ff9800;
+      }
+      .result-item {
+        margin: 5px 0;
+        padding: 5px 10px;
+        background: white;
+        border-radius: 3px;
+        display: inline-block;
+        margin-right: 10px;
+      }
+      .button {
+        background-color: #4caf50;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 14px;
+        margin: 5px;
+        transition: background-color 0.3s;
+      }
+      .button:hover {
+        background-color: #45a049;
+      }
+      .button.secondary {
+        background-color: #2196f3;
+      }
+      .button.secondary:hover {
+        background-color: #1976d2;
+      }
+      .button.danger {
+        background-color: #f44336;
+      }
+      .button.danger:hover {
+        background-color: #d32f2f;
+      }
+      .error-message {
+        background-color: #ffebee;
+        color: #c62828;
+        padding: 15px;
+        border-radius: 5px;
+        margin: 20px 0;
+        border-left: 4px solid #f44336;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container" id="mainContainer">
+      <h1>최신 문법 체크박스 (이벤트 위임)</h1>
+      <div id="errorContainer"></div>
+      <div class="select-all-container">
+        <label>
+          <input type="checkbox" id="selectAll" />
+          <strong>전체 선택/해제</strong>
+        </label>
+      </div>
+      <div class="checkbox-group">
+        <h3>취미 선택</h3>
+        <div class="checkbox-item">
+          <input type="checkbox" id="reading" value="reading" />
+          <label for="reading">독서</label>
+        </div>
+        <div class="checkbox-item">
+          <input type="checkbox" id="music" value="music" />
+          <label for="music">음악 감상</label>
+        </div>
+        <div class="checkbox-item">
+          <input type="checkbox" id="sports" value="sports" />
+          <label for="sports">운동</label>
+        </div>
+        <div class="checkbox-item">
+          <input type="checkbox" id="travel" value="travel" />
+          <label for="travel">여행</label>
+        </div>
+        <div class="checkbox-item">
+          <input type="checkbox" id="cooking" value="cooking" />
+          <label for="cooking">요리</label>
+        </div>
+        <div class="checkbox-item">
+          <input type="checkbox" id="gaming" value="gaming" />
+          <label for="gaming">게임</label>
+        </div>
+      </div>
+      <div style="text-align: center; margin: 20px 0">
+        <button class="button" id="getSelected">선택된 항목 확인</button>
+        <button class="button secondary" id="selectRandom">랜덤 선택</button>
+        <button class="button danger" id="clearAll">모두 해제</button>
+      </div>
+      <div class="result-section">
+        <h3>선택된 항목:</h3>
+        <div id="selectedItems"></div>
+      </div>
+    </div>
+    <script type="module">
+      "use strict";
+      class ModernCheckboxManager {
+        constructor() {
+          this.checkboxes = new Map();
+          this.selectAllCheckbox = document.getElementById("selectAll");
+          this.selectedItemsContainer =
+            document.getElementById("selectedItems");
+          this.errorContainer = document.getElementById("errorContainer");
+          this.container = document.getElementById("mainContainer");
+          this.init();
+        }
+        init() {
+          try {
+            const checkboxElements = document.querySelectorAll(
+              'input[type="checkbox"]:not(#selectAll)'
+            );
+            checkboxElements.forEach((checkbox) => {
+              this.checkboxes.set(checkbox.id, checkbox);
+            });
+            this.updateAllCheckboxItemStyles();
+            this.updateSelectAllState();
+            this.container.addEventListener(
+              "click",
+              this.handleDelegatedClick.bind(this)
+            );
+            this.container.addEventListener(
+              "change",
+              this.handleDelegatedChange.bind(this)
+            );
+          } catch (error) {
+            this.showError("초기화 중 오류 발생: " + error.message);
+          }
+        }
+        handleDelegatedClick(e) {
+          const { target } = e;
+          if (target.matches("button#clearAll")) {
+            this.clearAllCheckboxes();
+          } else if (target.matches("button#getSelected")) {
+            const selectedItems = this.getSelectedItems();
+            this.showSelectedItems(selectedItems);
+          } else if (target.matches("button#selectRandom")) {
+            this.selectRandomItems();
+          }
+        }
+        handleDelegatedChange(e) {
+          const { target } = e;
+          if (target.matches('input[type="checkbox"]#selectAll')) {
+            this.toggleAllCheckboxes(target.checked);
+          } else if (target.matches('input[type="checkbox"]:not(#selectAll)')) {
+            this.updateCheckboxItemStyle(target);
+            this.updateSelectAllState();
+            this.updateSelectedItemsDisplay();
+          }
+        }
+        updateCheckboxItemStyle(checkbox) {
+          const item = checkbox.closest(".checkbox-item");
+          if (item) {
+            if (checkbox.checked) {
+              item.classList.add("checked");
+            } else {
+              item.classList.remove("checked");
+            }
+          }
+        }
+        updateAllCheckboxItemStyles() {
+          this.checkboxes.forEach((checkbox) =>
+            this.updateCheckboxItemStyle(checkbox)
+          );
+        }
+        updateSelectAllState() {
+          const allCheckboxes = Array.from(this.checkboxes.values());
+          const checkedCount = allCheckboxes.filter((cb) => cb.checked).length;
+          if (checkedCount === 0) {
+            this.selectAllCheckbox.indeterminate = false;
+            this.selectAllCheckbox.checked = false;
+          } else if (checkedCount === allCheckboxes.length) {
+            this.selectAllCheckbox.indeterminate = false;
+            this.selectAllCheckbox.checked = true;
+          } else {
+            this.selectAllCheckbox.indeterminate = true;
+            this.selectAllCheckbox.checked = false;
+          }
+        }
+        toggleAllCheckboxes(checked) {
+          this.checkboxes.forEach((checkbox) => {
+            checkbox.checked = checked;
+            this.updateCheckboxItemStyle(checkbox);
+          });
+          this.updateSelectedItemsDisplay();
+        }
+        getSelectedItems() {
+          const selectedItems = [];
+          this.checkboxes.forEach((checkbox, id) => {
+            if (checkbox.checked) {
+              selectedItems.push({
+                id: id,
+                value: checkbox.value,
+                label: checkbox.nextElementSibling.textContent,
+              });
+            }
+          });
+          return selectedItems;
+        }
+        showSelectedItems(items) {
+          if (items.length === 0) {
+            this.selectedItemsContainer.innerHTML =
+              "<p>선택된 항목이 없습니다.</p>";
+            return;
+          }
+          const itemsHtml = items
+            .map((item) => `<span class="result-item">${item.label}</span>`)
+            .join("");
+          this.selectedItemsContainer.innerHTML = itemsHtml;
+        }
+        selectRandomItems() {
+          const allCheckboxes = Array.from(this.checkboxes.values());
+          const randomCount =
+            Math.floor(Math.random() * allCheckboxes.length) + 1;
+          allCheckboxes.forEach((checkbox) => {
+            checkbox.checked = false;
+            this.updateCheckboxItemStyle(checkbox);
+          });
+          const shuffled = [...allCheckboxes].sort(() => 0.5 - Math.random());
+          const selected = shuffled.slice(0, randomCount);
+          selected.forEach((checkbox) => {
+            checkbox.checked = true;
+            this.updateCheckboxItemStyle(checkbox);
+          });
+          this.updateSelectAllState();
+          this.updateSelectedItemsDisplay();
+        }
+        clearAllCheckboxes() {
+          this.checkboxes.forEach((checkbox) => {
+            checkbox.checked = false;
+            this.updateCheckboxItemStyle(checkbox);
+          });
+          this.updateSelectAllState();
+          this.updateSelectedItemsDisplay();
+        }
+        updateSelectedItemsDisplay() {
+          const selectedItems = this.getSelectedItems();
+          this.showSelectedItems(selectedItems);
+        }
+        showError(message) {
+          this.errorContainer.innerHTML = `
+          <div class="error-message">
+            <strong>오류 발생:</strong> ${message}
+            <br><small>이 오류는 구형 WebView에서 최신 JavaScript 문법을 지원하지 않아서 발생합니다.</small>
+          </div>
+        `;
+          console.error("WebView 호환성 오류:", message);
+        }
+      }
+      document.addEventListener("DOMContentLoaded", () => {
+        try {
+          new ModernCheckboxManager();
+        } catch (error) {
+          console.error("체크박스 관리자 초기화 실패:", error);
+          document.getElementById("errorContainer").innerHTML = `
+          <div class="error-message">
+            <strong>초기화 실패:</strong> ${error.message}
+            <br><small>이 오류는 구형 WebView에서 ES6 모듈이나 최신 문법을 지원하지 않아서 발생합니다.</small>
+          </div>
+        `;
+        }
+      });
+    </script>
+  </body>
+</html>
