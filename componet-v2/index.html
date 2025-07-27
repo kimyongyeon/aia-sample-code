@@ -7,6 +7,7 @@
   </head>
   <body>
     <h1>template sample</h1>
+    <div id="app"></div>
     <div id="targetDiv"></div>
     <script src="componentload2.js"></script>
     <script>
@@ -34,6 +35,36 @@
           currentPage: "Template 1",
         },
         "#targetDiv"
+      );
+
+      componentLoad.load(
+        "main-template.html",
+        {
+          title: "My Website 13213123",
+          navigation: {
+            items: [
+              { label: "Home", url: "/" },
+              { label: "About", url: "/about" },
+              { label: "Contact", url: "/contact" },
+            ],
+          },
+          user: {
+            name: "John Doe",
+            age: 30,
+            email: "john@example.com",
+          },
+          productsData: {
+            products: [
+              {
+                name: "Laptop",
+                description: "High performance laptop",
+                price: 999,
+              },
+              { name: "Phone", description: "Latest smartphone", price: 599 },
+            ],
+          },
+        },
+        "#app"
       );
     </script>
   </body>

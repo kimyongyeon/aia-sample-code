@@ -1,0 +1,34 @@
+<div class="main-container">
+  <header>
+    <h1>{{title}}</h1>
+    <!-- 헤더 템플릿 포함 -->
+    {{> header-template.html}}
+  </header>
+
+  <nav>
+    <!-- 네비게이션 템플릿 포함 -->
+    {{> nav-template.html navigation}}
+  </nav>
+
+  <main>
+    <!-- 사용자 프로필 템플릿 포함 (user 데이터만 전달) -->
+    {{> user-profile-template.html user}}
+
+    <section class="products">
+      <h2>Our Products</h2>
+      <!-- 제품 목록 템플릿 포함 -->
+      {{> product-list-template.html productsData}}
+    </section>
+  </main>
+
+  <footer>
+    <!-- 푸터 템플릿 포함 -->
+    {{> footer-template.html}}
+  </footer>
+
+  <script>
+    (function (responseData, replaceTemplate) {
+      console.log("Main template loaded");
+    })(responseData, replaceTemplate);
+  </script>
+</div>

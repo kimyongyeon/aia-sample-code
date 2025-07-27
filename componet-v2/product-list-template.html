@@ -1,0 +1,18 @@
+<div class="product-list">
+  {{#each products}}
+  <div class="product-item">
+    <h4>{{name}}</h4>
+    <p>{{description}}</p>
+    <span>Price: ${{price}}</span>
+  </div>
+  {{/each}}
+</div>
+<script>
+  (function (responseData, replaceTemplate) {
+    console.log(
+      "Product list loaded with",
+      responseData.products.length,
+      "products"
+    );
+  })(responseData, replaceTemplate);
+</script>
