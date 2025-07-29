@@ -1,0 +1,53 @@
+<div id="form-container">
+  <input type="text" name="username" placeholder="이름" /><br />
+  <input type="email" name="email" placeholder="이메일" /><br />
+
+  <label><input type="radio" name="gender" value="male" /> 남자</label>
+  <label><input type="radio" name="gender" value="female" /> 여자</label><br />
+
+  <label><input type="checkbox" name="hobby" value="reading" /> 독서</label>
+  <label><input type="checkbox" name="hobby" value="sports" /> 운동</label>
+  <label><input type="checkbox" name="hobby" value="music" /> 음악</label><br />
+
+  <label><input type="checkbox" id="agree" value="true" /> 약관 동의</label
+  ><br />
+
+  <select name="city">
+    <option value="">도시 선택</option>
+    <option value="seoul">서울</option>
+    <option value="busan">부산</option></select
+  ><br />
+
+  <label>
+    <input type="checkbox" data-group="items" data-master /> 전체 선택 </label
+  ><br />
+
+  <label><input type="checkbox" name="items" value="item1" /> 항목 1</label
+  ><br />
+  <label><input type="checkbox" name="items" value="item2" /> 항목 2</label
+  ><br />
+  <label><input type="checkbox" name="items" value="item3" /> 항목 3</label
+  ><br />
+
+  <textarea name="comment" placeholder="의견"></textarea><br />
+</div>
+
+<button onclick="console.log('Values:', manager.getValues())">
+  전체 값 보기
+</button>
+<button onclick="manager.setValue('username', '김철수')">이름 설정</button>
+<button onclick="manager.setValue('gender', 'female')">성별 설정</button>
+<button onclick="manager.setValue('hobby', ['reading', 'music'])">
+  취미 설정
+</button>
+<button onclick="manager.setValue('agree', true)">약관 동의</button>
+<button onclick="manager.reset()">초기화</button>
+
+<script src="FormElementManager.js"></script>
+<script>
+  const manager = new FormElementManager("#form-container", {
+    onChange: (data) => {
+      console.log(`[변경] ${data.name} →`, data.value);
+    },
+  });
+</script>

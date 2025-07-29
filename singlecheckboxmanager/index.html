@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Checkbox Manager</title>
+  </head>
+  <body>
+    <div id="checkbox-container">
+      <label
+        ><input type="checkbox" value="option1" name="single" /> 옵션 1</label
+      ><br />
+      <label
+        ><input type="checkbox" value="option2" name="single" /> 옵션 2</label
+      ><br />
+      <label
+        ><input type="checkbox" value="option3" name="single" /> 옵션 3</label
+      ><br />
+    </div>
+
+    <button onclick="console.log(manager.getSelectedValue())">
+      선택된 값 보기
+    </button>
+    <button onclick="manager.clearAll()">모두 해제</button>
+
+    <script src="./singlecheckbox.js"></script>
+    <script>
+      // 초기화
+      const manager = new SingleCheckboxManager("#checkbox-container");
+    </script>
+  </body>
+</html>

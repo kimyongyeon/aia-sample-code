@@ -1,0 +1,1047 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CheckboxManager IIFE 버전 (순수 자바스크립트)</title>
+    <style>
+      .container {
+        max-width: 800px;
+        margin: 20px auto;
+        padding: 20px;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      }
+
+      .demo-section {
+        margin: 30px 0;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        overflow: hidden;
+      }
+
+      .demo-header {
+        background: #f5f5f5;
+        padding: 15px 20px;
+        font-weight: bold;
+        font-size: 16px;
+        border-bottom: 1px solid #e0e0e0;
+      }
+
+      .demo-content {
+        padding: 20px;
+      }
+
+      .checkbox-group {
+        margin: 15px 0;
+      }
+
+      .all-check {
+        background: #e3f2fd;
+        padding: 12px 15px;
+        border-radius: 5px;
+        margin-bottom: 10px;
+        font-weight: 600;
+      }
+
+      .item-list {
+        background: #fafafa;
+        border-radius: 5px;
+        overflow: hidden;
+      }
+
+      .item {
+        padding: 10px 15px;
+        border-bottom: 1px solid #eee;
+        transition: background-color 0.2s;
+      }
+
+      .item:last-child {
+        border-bottom: none;
+      }
+
+      .item:hover {
+        background-color: #f0f0f0;
+      }
+
+      .item input[type="checkbox"] {
+        margin-right: 10px;
+        transform: scale(1.1);
+      }
+
+      .all-check input[type="checkbox"] {
+        margin-right: 10px;
+        transform: scale(1.2);
+      }
+
+      .status-info {
+        margin-top: 15px;
+        padding: 12px;
+        background: #fff8e1;
+        border-radius: 5px;
+        border-left: 4px solid #ffc107;
+        font-size: 14px;
+      }
+
+      .code-example {
+        background: #f8f9fa;
+        border: 1px solid #e9ecef;
+        border-radius: 5px;
+        padding: 15px;
+        margin: 15px 0;
+        font-family: "Courier New", monospace;
+        font-size: 13px;
+        color: #495057;
+        overflow-x: auto;
+      }
+
+      .btn-group {
+        margin: 15px 0;
+      }
+
+      .btn {
+        display: inline-block;
+        padding: 8px 16px;
+        margin: 0 5px 5px 0;
+        background: #007bff;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+        transition: background-color 0.2s;
+      }
+
+      .btn:hover {
+        background: #0056b3;
+      }
+
+      .btn-secondary {
+        background: #6c757d;
+      }
+
+      .btn-secondary:hover {
+        background: #545b62;
+      }
+
+      .state-indicator {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: bold;
+        margin-left: 10px;
+      }
+
+      .state-none {
+        background: #e9ecef;
+        color: #6c757d;
+      }
+
+      .state-partial {
+        background: #fff3cd;
+        color: #856404;
+      }
+
+      .state-all {
+        background: #d4edda;
+        color: #155724;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>📦 CheckboxManager IIFE 버전 (순수 자바스크립트)</h1>
+
+      <div class="code-example">
+        <strong>IIFE 사용법:</strong><br />
+        // 기본 사용<br />
+        const manager = CheckboxManager('#allCheck', '.itemCheck');<br /><br />
+        // 옵션과 함께 사용<br />
+        const manager = CheckboxManager('#allCheck', '.itemCheck', {<br />
+        &nbsp;&nbsp;showIndeterminate: false,<br />
+        &nbsp;&nbsp;onChange: (data) => console.log(data),<br />
+        &nbsp;&nbsp;debug: true<br />
+        });
+      </div>
+
+      <!-- 기본 예제 -->
+      <div class="demo-section">
+        <div class="demo-header">🛍️ 상품 선택 (showIndeterminate: false)</div>
+        <div class="demo-content">
+          <div class="checkbox-group">
+            <div class="all-check">
+              <label>
+                <input type="checkbox" id="products-all" />
+                <span>전체 상품 선택</span>
+                <span class="state-indicator state-none" id="products-state"
+                  >없음</span
+                >
+              </label>
+            </div>
+
+            <div class="item-list">
+              <div class="item">
+                <label>
+                  <input
+                    type="checkbox"
+                    class="product-item"
+                    value="laptop"
+                    data-name="노트북"
+                    data-price="1200000"
+                  />
+                  노트북 컴퓨터 (₩1,200,000)
+                </label>
+              </div>
+              <div class="item">
+                <label>
+                  <input
+                    type="checkbox"
+                    class="product-item"
+                    value="mouse"
+                    data-name="마우스"
+                    data-price="35000"
+                  />
+                  무선 마우스 (₩35,000)
+                </label>
+              </div>
+              <div class="item">
+                <label>
+                  <input
+                    type="checkbox"
+                    class="product-item"
+                    value="keyboard"
+                    data-name="키보드"
+                    data-price="150000"
+                  />
+                  기계식 키보드 (₩150,000)
+                </label>
+              </div>
+              <div class="item">
+                <label>
+                  <input
+                    type="checkbox"
+                    class="product-item"
+                    value="monitor"
+                    data-name="모니터"
+                    data-price="400000"
+                  />
+                  4K 모니터 (₩400,000)
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div class="btn-group">
+            <button class="btn" onclick="productManager.checkAll()">
+              전체 선택
+            </button>
+            <button class="btn" onclick="productManager.uncheckAll()">
+              전체 해제
+            </button>
+            <button
+              class="btn"
+              onclick="productManager.checkValues(['laptop', 'mouse'])"
+            >
+              노트북+마우스
+            </button>
+            <button
+              class="btn btn-secondary"
+              onclick="showManagerStatus('productManager')"
+            >
+              상태 확인
+            </button>
+          </div>
+
+          <div class="status-info" id="products-status">상태: 준비됨</div>
+        </div>
+      </div>
+
+      <!-- 중간상태 표시 예제 -->
+      <div class="demo-section">
+        <div class="demo-header">
+          👥 사용자 권한 관리 (showIndeterminate: true)
+        </div>
+        <div class="demo-content">
+          <div class="checkbox-group">
+            <div class="all-check">
+              <label>
+                <input type="checkbox" id="users-all" />
+                <span>모든 사용자 선택</span>
+                <span class="state-indicator state-none" id="users-state"
+                  >없음</span
+                >
+              </label>
+            </div>
+
+            <div class="item-list">
+              <div class="item">
+                <label>
+                  <input
+                    type="checkbox"
+                    class="user-item"
+                    value="admin"
+                    data-role="관리자"
+                  />
+                  관리자 (admin@company.com)
+                </label>
+              </div>
+              <div class="item">
+                <label>
+                  <input
+                    type="checkbox"
+                    class="user-item"
+                    value="editor"
+                    data-role="편집자"
+                  />
+                  편집자 (editor@company.com)
+                </label>
+              </div>
+              <div class="item">
+                <label>
+                  <input
+                    type="checkbox"
+                    class="user-item"
+                    value="viewer"
+                    data-role="조회자"
+                  />
+                  조회자 (viewer@company.com)
+                </label>
+              </div>
+              <div class="item">
+                <label>
+                  <input
+                    type="checkbox"
+                    class="user-item"
+                    value="guest"
+                    data-role="게스트"
+                  />
+                  게스트 (guest@company.com)
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div class="btn-group">
+            <button class="btn" onclick="userManager.toggle()">
+              전체 토글
+            </button>
+            <button
+              class="btn"
+              onclick="userManager.checkValues(['admin', 'editor'])"
+            >
+              관리자+편집자
+            </button>
+            <button class="btn" onclick="userManager.inverse()">
+              선택 반전
+            </button>
+            <button
+              class="btn btn-secondary"
+              onclick="showManagerStatus('userManager')"
+            >
+              상태 확인
+            </button>
+          </div>
+
+          <div class="status-info" id="users-status">상태: 준비됨</div>
+        </div>
+      </div>
+
+      <!-- 동적 추가 예제 -->
+      <div class="demo-section">
+        <div class="demo-header">➕ 동적 아이템 추가/삭제</div>
+        <div class="demo-content">
+          <div class="checkbox-group">
+            <div class="all-check">
+              <label>
+                <input type="checkbox" id="dynamic-all" />
+                <span>전체 할일 선택</span>
+                <span class="state-indicator state-none" id="dynamic-state"
+                  >없음</span
+                >
+              </label>
+            </div>
+
+            <div class="item-list" id="dynamic-list">
+              <div class="item">
+                <label>
+                  <input
+                    type="checkbox"
+                    class="todo-item"
+                    value="1"
+                    data-task="회의 참석"
+                  />
+                  회의 참석 (오후 2시)
+                </label>
+              </div>
+              <div class="item">
+                <label>
+                  <input
+                    type="checkbox"
+                    class="todo-item"
+                    value="2"
+                    data-task="보고서 작성"
+                  />
+                  보고서 작성 (마감: 내일)
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div class="btn-group">
+            <button class="btn" onclick="addTodoItem()">할일 추가</button>
+            <button class="btn" onclick="removeSelectedItems()">
+              선택 항목 삭제
+            </button>
+            <button class="btn btn-secondary" onclick="todoManager.refresh()">
+              상태 새로고침
+            </button>
+          </div>
+
+          <div class="status-info" id="todos-status">상태: 준비됨</div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      /**
+       * CheckboxManager IIFE 버전 - 순수 자바스크립트 체크박스 전체선택 모듈
+       * @version 3.0.0 (IIFE + Vanilla JS)
+       * @author 웹개발자
+       */
+      const CheckboxManager = (() => {
+        "use strict";
+
+        // 프라이빗 변수들
+        const instances = new Map();
+        let instanceCounter = 0;
+
+        // 유틸리티 함수들
+        const utils = {
+          // 요소 선택 (CSS 선택자 지원)
+          select: (selector, context = document) => {
+            if (typeof selector === "string") {
+              return context.querySelector(selector);
+            }
+            return selector;
+          },
+
+          // 다중 요소 선택
+          selectAll: (selector, context = document) => {
+            if (typeof selector === "string") {
+              return Array.from(context.querySelectorAll(selector));
+            }
+            return Array.isArray(selector) ? selector : [selector];
+          },
+
+          // 데이터 속성 가져오기
+          getData: (element) => {
+            const data = {};
+            for (let attr of element.attributes) {
+              if (attr.name.startsWith("data-")) {
+                const key = attr.name
+                  .slice(5)
+                  .replace(/-([a-z])/g, (g) => g[1].toUpperCase());
+                data[key] = attr.value;
+              }
+            }
+            return data;
+          },
+
+          // 이벤트 리스너 추가 (위임 지원)
+          on: (element, event, selector, handler) => {
+            if (typeof selector === "function") {
+              handler = selector;
+              element.addEventListener(event, handler);
+              return { element, event, handler };
+            } else {
+              const delegateHandler = (e) => {
+                if (e.target.matches(selector)) {
+                  handler.call(e.target, e);
+                }
+              };
+              element.addEventListener(event, delegateHandler);
+              return { element, event, handler: delegateHandler };
+            }
+          },
+
+          // 이벤트 리스너 제거
+          off: (eventData) => {
+            eventData.element.removeEventListener(
+              eventData.event,
+              eventData.handler
+            );
+          },
+
+          // 옵션 병합
+          extend: (target, ...sources) => {
+            return Object.assign({}, target, ...sources);
+          },
+        };
+
+        // 체크박스 매니저 생성자 함수
+        function createManager(allSelector, itemSelector, options = {}) {
+          const instanceId = ++instanceCounter;
+
+          // 기본 옵션
+          const defaultOptions = {
+            showIndeterminate: false,
+            autoInit: true,
+            onChange: null,
+            onAllChange: null,
+            onItemChange: null,
+            container: document,
+            debug: false,
+          };
+
+          const config = utils.extend(defaultOptions, options);
+
+          // 프라이빗 상태
+          let isInitialized = false;
+          let eventListeners = [];
+
+          // DOM 요소 참조
+          const getElements = () => ({
+            allCheckbox: utils.select(allSelector, config.container),
+            itemCheckboxes: utils.selectAll(itemSelector, config.container),
+          });
+
+          // 로그 함수
+          const log = (...args) => {
+            if (config.debug) {
+              console.log(`[CheckboxManager-${instanceId}]`, ...args);
+            }
+          };
+
+          // 콜백 실행
+          const executeCallback = (callbackName, data) => {
+            const callback = config[callbackName];
+            if (typeof callback === "function") {
+              try {
+                callback.call(instance, data);
+              } catch (error) {
+                console.error(
+                  `CheckboxManager 콜백 오류 (${callbackName}):`,
+                  error
+                );
+              }
+            }
+          };
+
+          // 상태 표시기 업데이트
+          const updateStateIndicator = (state) => {
+            const allId = allSelector.replace("#", "");
+            const stateIndicator = utils.select(`#${allId}-state`);
+
+            if (!stateIndicator) return;
+
+            const stateConfig = {
+              none: { className: "state-none", text: "없음" },
+              partial: { className: "state-partial", text: "일부" },
+              all: { className: "state-all", text: "전체" },
+            };
+
+            const stateData = stateConfig[state] || stateConfig.none;
+
+            // 기존 클래스 제거
+            stateIndicator.className =
+              stateIndicator.className.replace(/state-\w+/g, "").trim() +
+              " " +
+              stateData.className;
+
+            stateIndicator.textContent = stateData.text;
+          };
+
+          // 전체 체크박스 상태 업데이트
+          const updateAllCheckboxState = () => {
+            const { allCheckbox, itemCheckboxes } = getElements();
+
+            if (!allCheckbox || itemCheckboxes.length === 0) {
+              if (allCheckbox) {
+                allCheckbox.checked = false;
+                allCheckbox.indeterminate = false;
+              }
+              return;
+            }
+
+            const totalItems = itemCheckboxes.length;
+            const checkedItems = itemCheckboxes.filter(
+              (item) => item.checked
+            ).length;
+
+            if (checkedItems === 0) {
+              // 아무것도 선택되지 않음
+              allCheckbox.checked = false;
+              allCheckbox.indeterminate = false;
+              updateStateIndicator("none");
+            } else if (checkedItems === totalItems) {
+              // 모든 항목 선택됨
+              allCheckbox.checked = true;
+              allCheckbox.indeterminate = false;
+              updateStateIndicator("all");
+            } else {
+              // 일부만 선택됨
+              allCheckbox.checked = false;
+              allCheckbox.indeterminate = config.showIndeterminate;
+              updateStateIndicator("partial");
+            }
+          };
+
+          // 전체 체크박스 변경 핸들러
+          const handleAllChange = (e) => {
+            const { itemCheckboxes } = getElements();
+            const isChecked = e.target.checked;
+
+            // 모든 개별 체크박스 상태 변경
+            itemCheckboxes.forEach((item) => {
+              item.checked = isChecked;
+            });
+
+            const changeData = getChangeData();
+
+            executeCallback("onAllChange", {
+              checked: isChecked,
+              selectedValues: changeData.selectedValues,
+              selectedItems: changeData.selectedItems,
+            });
+
+            executeCallback("onChange", changeData);
+
+            log(`전체 선택: ${isChecked}`, changeData.selectedValues);
+          };
+
+          // 개별 체크박스 변경 핸들러
+          const handleItemChange = (e) => {
+            updateAllCheckboxState();
+
+            const changeData = getChangeData();
+
+            executeCallback("onItemChange", {
+              target: e.target,
+              checked: e.target.checked,
+              value: e.target.value,
+              selectedValues: changeData.selectedValues,
+              selectedItems: changeData.selectedItems,
+            });
+
+            executeCallback("onChange", changeData);
+
+            log("개별 선택 변경", changeData.selectedValues);
+          };
+
+          // 변경 데이터 생성
+          const getChangeData = () => {
+            const { itemCheckboxes } = getElements();
+            const checkedItems = itemCheckboxes.filter((item) => item.checked);
+
+            const selectedValues = checkedItems.map((item) => item.value);
+            const selectedItems = checkedItems.map((item) => ({
+              element: item,
+              value: item.value,
+              text: item.parentElement.textContent.trim(),
+              data: utils.getData(item),
+            }));
+
+            const selectedCount = checkedItems.length;
+            const totalCount = itemCheckboxes.length;
+
+            let selectionState = "none";
+            if (selectedCount === totalCount && totalCount > 0) {
+              selectionState = "all";
+            } else if (selectedCount > 0) {
+              selectionState = "partial";
+            }
+
+            return {
+              selectedValues,
+              selectedItems,
+              selectedCount,
+              totalCount,
+              isAllSelected: selectedCount === totalCount && totalCount > 0,
+              isNoneSelected: selectedCount === 0,
+              isPartialSelected:
+                selectedCount > 0 && selectedCount < totalCount,
+              selectionState,
+            };
+          };
+
+          // 공개 API
+          const instance = {
+            // 초기화
+            init() {
+              if (isInitialized) {
+                log("이미 초기화되었습니다.");
+                return this;
+              }
+
+              const container = utils.select(config.container);
+
+              // 이벤트 리스너 등록 (위임 방식)
+              const allChangeListener = utils.on(
+                container,
+                "change",
+                allSelector,
+                handleAllChange
+              );
+              const itemChangeListener = utils.on(
+                container,
+                "change",
+                itemSelector,
+                handleItemChange
+              );
+
+              eventListeners.push(allChangeListener, itemChangeListener);
+
+              // 초기 상태 설정
+              updateAllCheckboxState();
+
+              isInitialized = true;
+              log("CheckboxManager 초기화 완료");
+
+              return this;
+            },
+
+            // 전체 선택
+            checkAll() {
+              const { itemCheckboxes } = getElements();
+              itemCheckboxes.forEach((item) => {
+                item.checked = true;
+              });
+              updateAllCheckboxState();
+              executeCallback("onChange", getChangeData());
+              return this;
+            },
+
+            // 전체 해제
+            uncheckAll() {
+              const { itemCheckboxes } = getElements();
+              itemCheckboxes.forEach((item) => {
+                item.checked = false;
+              });
+              updateAllCheckboxState();
+              executeCallback("onChange", getChangeData());
+              return this;
+            },
+
+            // 전체 토글
+            toggle() {
+              const { allCheckbox } = getElements();
+              return allCheckbox && allCheckbox.checked
+                ? this.uncheckAll()
+                : this.checkAll();
+            },
+
+            // 선택 반전
+            inverse() {
+              const { itemCheckboxes } = getElements();
+              itemCheckboxes.forEach((item) => {
+                item.checked = !item.checked;
+              });
+              updateAllCheckboxState();
+              executeCallback("onChange", getChangeData());
+              return this;
+            },
+
+            // 특정 값들 선택
+            checkValues(values) {
+              const valueArray = Array.isArray(values) ? values : [values];
+              const { itemCheckboxes } = getElements();
+
+              itemCheckboxes.forEach((item) => {
+                item.checked = valueArray.includes(item.value);
+              });
+
+              updateAllCheckboxState();
+              executeCallback("onChange", getChangeData());
+              return this;
+            },
+
+            // 특정 값들 해제
+            uncheckValues(values) {
+              const valueArray = Array.isArray(values) ? values : [values];
+              const { itemCheckboxes } = getElements();
+
+              itemCheckboxes.forEach((item) => {
+                if (valueArray.includes(item.value)) {
+                  item.checked = false;
+                }
+              });
+
+              updateAllCheckboxState();
+              executeCallback("onChange", getChangeData());
+              return this;
+            },
+
+            // 선택된 값들 가져오기
+            getSelectedValues() {
+              return getChangeData().selectedValues;
+            },
+
+            // 선택된 아이템 정보 가져오기
+            getSelectedItems() {
+              return getChangeData().selectedItems;
+            },
+
+            // 선택 개수 가져오기
+            getSelectedCount() {
+              return getChangeData().selectedCount;
+            },
+
+            // 전체 개수 가져오기
+            getTotalCount() {
+              return getChangeData().totalCount;
+            },
+
+            // 선택 상태 확인
+            getSelectionState() {
+              return getChangeData().selectionState;
+            },
+
+            // 변경 데이터 가져오기
+            getChangeData() {
+              return getChangeData();
+            },
+
+            // 상태 새로고침
+            refresh() {
+              updateAllCheckboxState();
+              executeCallback("onChange", getChangeData());
+              return this;
+            },
+
+            // 인스턴스 제거
+            destroy() {
+              eventListeners.forEach((listener) => {
+                utils.off(listener);
+              });
+              eventListeners = [];
+              instances.delete(instanceId);
+              isInitialized = false;
+              log("CheckboxManager 제거됨");
+              return this;
+            },
+
+            // 인스턴스 ID 가져오기
+            getId() {
+              return instanceId;
+            },
+          };
+
+          // 인스턴스 저장
+          instances.set(instanceId, instance);
+
+          // 자동 초기화
+          if (config.autoInit) {
+            instance.init();
+          }
+
+          return instance;
+        }
+
+        // 팩토리 함수 반환 (IIFE의 반환값)
+        return createManager;
+      })();
+
+      // 전역으로 노출
+      window.CheckboxManager = CheckboxManager;
+
+      // ==========================================
+      // 사용 예제 코드
+      // ==========================================
+
+      document.addEventListener("DOMContentLoaded", () => {
+        // 상품 관리자 생성 (showIndeterminate: false)
+        window.productManager = CheckboxManager(
+          "#products-all",
+          ".product-item",
+          {
+            showIndeterminate: false,
+            debug: true,
+            onChange: ({
+              selectedCount,
+              totalCount,
+              selectedItems,
+              selectionState,
+            }) => {
+              const status = `선택된 상품: ${selectedCount}/${totalCount}개 (${selectionState})`;
+              const items = selectedItems
+                .map((item) => item.data.name || item.value)
+                .join(", ");
+              const totalPrice = selectedItems.reduce(
+                (sum, item) => sum + (parseInt(item.data.price) || 0),
+                0
+              );
+
+              document.getElementById("products-status").innerHTML = `
+                        ${status}<br>
+                        항목: ${items || "없음"}<br>
+                        총액: ${totalPrice.toLocaleString()}원
+                    `;
+            },
+          }
+        );
+
+        // 사용자 관리자 생성 (showIndeterminate: true)
+        window.userManager = CheckboxManager("#users-all", ".user-item", {
+          showIndeterminate: true,
+          onChange: ({
+            selectedCount,
+            totalCount,
+            selectedItems,
+            selectionState,
+          }) => {
+            const status = `선택된 사용자: ${selectedCount}/${totalCount}명 (${selectionState})`;
+            const users = selectedItems
+              .map((item) => item.data.role || item.value)
+              .join(", ");
+            document.getElementById(
+              "users-status"
+            ).innerHTML = `${status}<br>역할: ${users || "없음"}`;
+          },
+        });
+
+        // 할일 관리자 생성
+        window.todoManager = CheckboxManager("#dynamic-all", ".todo-item", {
+          showIndeterminate: false,
+          onChange: ({
+            selectedCount,
+            totalCount,
+            selectedItems,
+            selectionState,
+          }) => {
+            const status = `완료된 할일: ${selectedCount}/${totalCount}개 (${selectionState})`;
+            const tasks = selectedItems
+              .map((item) => item.data.task || item.value)
+              .join(", ");
+            document.getElementById(
+              "todos-status"
+            ).innerHTML = `${status}<br>작업: ${tasks || "없음"}`;
+          },
+        });
+      });
+
+      // 전역 유틸리티 함수들
+      const showManagerStatus = (managerName) => {
+        const manager = window[managerName];
+        const data = manager.getChangeData();
+
+        if (data.selectedCount === 0) {
+          alert("선택된 항목이 없습니다.");
+          return;
+        }
+
+        const message = data.selectedItems
+          .map(
+            (item, index) => `${index + 1}. ${item.text} (값: ${item.value})`
+          )
+          .join("\n");
+
+        alert(
+          `선택 상태: ${data.selectionState}\n선택된 항목 (${data.selectedCount}개):\n\n${message}`
+        );
+      };
+
+      // 동적 할일 추가
+      let todoCounter = 3;
+      const addTodoItem = () => {
+        const tasks = [
+          "이메일 확인",
+          "코드 리뷰",
+          "문서 업데이트",
+          "미팅 준비",
+          "테스트 실행",
+        ];
+        const randomTask = tasks[Math.floor(Math.random() * tasks.length)];
+        const currentTime = new Date().toLocaleTimeString();
+
+        const newItem = document.createElement("div");
+        newItem.className = "item";
+        newItem.innerHTML = `
+                <label>
+                    <input type="checkbox" class="todo-item" value="${todoCounter}" data-task="${randomTask}">
+                    ${randomTask} (추가됨: ${currentTime})
+                </label>
+            `;
+
+        document.getElementById("dynamic-list").appendChild(newItem);
+        todoManager.refresh();
+        todoCounter++;
+      };
+
+      // 선택된 할일 삭제
+      const removeSelectedItems = () => {
+        const { selectedValues, selectedCount } = todoManager.getChangeData();
+
+        if (selectedCount === 0) {
+          alert("삭제할 항목을 선택해주세요.");
+          return;
+        }
+
+        if (confirm(`선택된 ${selectedCount}개 항목을 삭제하시겠습니까?`)) {
+          selectedValues.forEach((value) => {
+            const item = document.querySelector(`.todo-item[value="${value}"]`);
+            if (item) {
+              item.closest(".item").remove();
+            }
+          });
+          todoManager.refresh();
+        }
+      };
+
+      // 개발자 콘솔용 테스트 함수들
+      const testFunctions = {
+        checkLaptopMouse: () => productManager.checkValues(["laptop", "mouse"]),
+        inverseUsers: () => userManager.inverse(),
+        getSelectedTodos: () => todoManager.getSelectedItems(),
+        showAllStates: () => {
+          console.log("Product State:", productManager.getSelectionState());
+          console.log("User State:", userManager.getSelectionState());
+          console.log("Todo State:", todoManager.getSelectionState());
+        },
+        destroyProduct: () => productManager.destroy(),
+        recreateProduct: () => {
+          window.productManager = CheckboxManager(
+            "#products-all",
+            ".product-item",
+            {
+              showIndeterminate: false,
+              debug: true,
+              onChange: ({
+                selectedCount,
+                totalCount,
+                selectedItems,
+                selectionState,
+              }) => {
+                const status = `선택된 상품: ${selectedCount}/${totalCount}개 (${selectionState})`;
+                const items = selectedItems
+                  .map((item) => item.data.name || item.value)
+                  .join(", ");
+                const totalPrice = selectedItems.reduce(
+                  (sum, item) => sum + (parseInt(item.data.price) || 0),
+                  0
+                );
+
+                document.getElementById("products-status").innerHTML = `
+                            ${status}<br>
+                            항목: ${items || "없음"}<br>
+                            총액: ${totalPrice.toLocaleString()}원
+                        `;
+              },
+            }
+          );
+        },
+      };
+
+      // 테스트 함수들을 전역에 노출
+      Object.assign(window, testFunctions);
+
+      console.log("=== CheckboxManager IIFE 테스트 함수 ===");
+      console.log("checkLaptopMouse() - 노트북과 마우스 선택");
+      console.log("inverseUsers() - 사용자 선택 반전");
+      console.log("getSelectedTodos() - 선택된 할일 정보");
+      console.log("showAllStates() - 모든 매니저 상태 표시");
+      console.log("destroyProduct() - 상품 매니저 제거");
+      console.log("recreateProduct() - 상품 매니저 재생성");
+      console.log("productManager.getChangeData() - 상품 선택 데이터");
+    </script>
+  </body>
+</html>
