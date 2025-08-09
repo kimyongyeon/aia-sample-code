@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>페이지 1 - DataShare 테스트</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 20px;
+      }
+
+      .container {
+        max-width: 800px;
+        margin: 0 auto;
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+      }
+
+      .header {
+        background: linear-gradient(45deg, #2196f3, #21cbf3);
+        color: white;
+        padding: 30px;
+        text-align: center;
+      }
+
+      .header h1 {
+        font-size: 2.5rem;
+        margin-bottom: 10px;
+      }
+
+      .header p {
+        font-size: 1.1rem;
+        opacity: 0.9;
+      }
+
+      .nav {
+        background: #f8f9fa;
+        padding: 20px;
+        border-bottom: 1px solid #dee2e6;
+      }
+
+      .nav a {
+        display: inline-block;
+        padding: 10px 20px;
+        margin-right: 10px;
+        background: #007bff;
+        color: white;
+        text-decoration: none;
+        border-radius: 5px;
+        transition: background-color 0.3s;
+      }
+
+      .nav a:hover {
+        background: #0056b3;
+      }
+
+      .nav a.current {
+        background: #28a745;
+      }
+
+      .content {
+        padding: 30px;
+      }
+
+      .section {
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 25px;
+        margin-bottom: 20px;
+        border: 1px solid #e9ecef;
+      }
+
+      .section h2 {
+        color: #495057;
+        margin-bottom: 20px;
+        font-size: 1.4rem;
+        border-bottom: 2px solid #dee2e6;
+        padding-bottom: 10px;
+      }
+
+      .form-group {
+        margin-bottom: 20px;
+      }
+
+      .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+        color: #495057;
+      }
+
+      .form-group input,
+      .form-group textarea {
+        width: 100%;
+        padding: 12px;
+        border: 2px solid #dee2e6;
+        border-radius: 8px;
+        font-size: 14px;
+        transition: border-color 0.3s ease;
+      }
+
+      .form-group input:focus,
+      .form-group textarea:focus {
+        outline: none;
+        border-color: #2196f3;
+        box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.1);
+      }
+
+      .btn {
+        background: linear-gradient(45deg, #2196f3, #21cbf3);
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 600;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        margin-right: 10px;
+        margin-bottom: 10px;
+      }
+
+      .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(33, 150, 243, 0.4);
+      }
+
+      .btn-success {
+        background: linear-gradient(45deg, #4caf50, #8bc34a);
+      }
+
+      .btn-success:hover {
+        box-shadow: 0 5px 15px rgba(76, 175, 80, 0.4);
+      }
+
+      .data-display {
+        background: #e3f2fd;
+        border: 2px solid #2196f3;
+        border-radius: 8px;
+        padding: 15px;
+        margin-top: 15px;
+      }
+
+      .data-display h3 {
+        color: #1976d2;
+        margin-bottom: 10px;
+      }
+
+      .data-item {
+        background: white;
+        padding: 10px;
+        margin: 5px 0;
+        border-radius: 5px;
+        border-left: 4px solid #2196f3;
+        font-family: "Courier New", monospace;
+        font-size: 12px;
+      }
+
+      .data-key {
+        font-weight: bold;
+        color: #1976d2;
+      }
+
+      .data-value {
+        color: #424242;
+        margin-left: 10px;
+      }
+
+      .status {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: #4caf50;
+        color: white;
+        padding: 10px 20px;
+        border-radius: 20px;
+        font-weight: bold;
+        box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+        z-index: 1000;
+      }
+
+      .info-box {
+        background: #d1ecf1;
+        border: 1px solid #bee5eb;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 20px;
+      }
+
+      .info-box h3 {
+        color: #0c5460;
+        margin-bottom: 10px;
+      }
+
+      .info-box p {
+        color: #0c5460;
+        margin-bottom: 5px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="status" id="status">페이지 1 로딩 중...</div>
+
+    <div class="container">
+      <div class="header">
+        <h1>📄 페이지 1</h1>
+        <p>IndexedDB 기반 데이터 공유 테스트 - 사용자 정보 입력</p>
+      </div>
+
+      <div class="nav">
+        <a href="page1.html" class="current">페이지 1</a>
+        <a href="page2.html">페이지 2</a>
+        <a href="page3.html">페이지 3</a>
+        <a href="dashboard.html">대시보드</a>
+      </div>
+
+      <div class="content">
+        <div class="info-box">
+          <h3>🎯 페이지 1의 역할</h3>
+          <p>• 사용자 기본 정보를 입력하고 저장합니다</p>
+          <p>• 데이터는 IndexedDB에 영구 저장됩니다</p>
+          <p>• 다른 페이지로 이동해도 데이터가 유지됩니다</p>
+        </div>
+
+        <div class="section">
+          <h2>👤 사용자 정보 입력</h2>
+
+          <div class="form-group">
+            <label for="userName">이름</label>
+            <input type="text" id="userName" placeholder="이름을 입력하세요" />
+          </div>
+
+          <div class="form-group">
+            <label for="userEmail">이메일</label>
+            <input
+              type="email"
+              id="userEmail"
+              placeholder="이메일을 입력하세요"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="userAge">나이</label>
+            <input
+              type="number"
+              id="userAge"
+              placeholder="나이를 입력하세요"
+              min="1"
+              max="120"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="userBio">자기소개</label>
+            <textarea
+              id="userBio"
+              rows="4"
+              placeholder="자기소개를 작성하세요"
+            ></textarea>
+          </div>
+
+          <button class="btn" onclick="saveUserInfo()">
+            💾 사용자 정보 저장
+          </button>
+          <button class="btn btn-success" onclick="loadUserInfo()">
+            🔄 저장된 정보 불러오기
+          </button>
+        </div>
+
+        <div class="section">
+          <h2>🎨 테마 설정</h2>
+
+          <div class="form-group">
+            <label for="themeColor">테마 색상</label>
+            <select id="themeColor">
+              <option value="blue">파란색</option>
+              <option value="green">초록색</option>
+              <option value="purple">보라색</option>
+              <option value="red">빨간색</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="fontSize">글꼴 크기</label>
+            <select id="fontSize">
+              <option value="small">작게</option>
+              <option value="medium">보통</option>
+              <option value="large">크게</option>
+            </select>
+          </div>
+
+          <button class="btn" onclick="saveTheme()">🎨 테마 저장</button>
+        </div>
+
+        <div class="data-display">
+          <h3>📊 현재 저장된 데이터</h3>
+          <div id="currentData">데이터 로딩 중...</div>
+        </div>
+      </div>
+    </div>
+
+    <script src="DataSharePersistent.js"></script>
+    <script>
+      "use strict";
+
+      let isInitialized = false;
+
+      // 페이지 로드 시 초기화
+      document.addEventListener("DOMContentLoaded", async function () {
+        console.log("🎯 [페이지 1] DOM 로딩 완료");
+
+        try {
+          // DataShare 초기화 대기
+          await DataShare.init();
+
+          console.log("✅ [페이지 1] DataShare 초기화 완료");
+          DataShare.setDevMode(true);
+
+          // 저장된 데이터 불러오기
+          await loadAllData();
+
+          // 상태 업데이트
+          updateStatus("페이지 1 준비됨", "success");
+
+          isInitialized = true;
+        } catch (error) {
+          console.error("❌ [페이지 1] 초기화 실패:", error);
+          updateStatus("초기화 실패", "error");
+        }
+      });
+
+      /**
+       * 사용자 정보 저장
+       */
+      async function saveUserInfo() {
+        if (!isInitialized) {
+          alert("아직 초기화가 완료되지 않았습니다.");
+          return;
+        }
+
+        const userInfo = {
+          name: document.getElementById("userName").value.trim(),
+          email: document.getElementById("userEmail").value.trim(),
+          age: parseInt(document.getElementById("userAge").value) || 0,
+          bio: document.getElementById("userBio").value.trim(),
+          updatedAt: new Date().toISOString(),
+        };
+
+        if (!userInfo.name) {
+          alert("이름을 입력해주세요.");
+          return;
+        }
+
+        try {
+          await DataShare.set("user.profile", userInfo);
+          console.log("✅ [페이지 1] 사용자 정보 저장됨:", userInfo);
+
+          updateCurrentData();
+          updateStatus("사용자 정보 저장됨", "success");
+
+          alert("사용자 정보가 저장되었습니다!");
+        } catch (error) {
+          console.error("❌ [페이지 1] 사용자 정보 저장 실패:", error);
+          updateStatus("저장 실패", "error");
+          alert("저장에 실패했습니다: " + error.message);
+        }
+      }
+
+      /**
+       * 사용자 정보 불러오기
+       */
+      async function loadUserInfo() {
+        if (!isInitialized) {
+          alert("아직 초기화가 완료되지 않았습니다.");
+          return;
+        }
+
+        try {
+          const userInfo = DataShare.get("user.profile");
+
+          if (userInfo) {
+            document.getElementById("userName").value = userInfo.name || "";
+            document.getElementById("userEmail").value = userInfo.email || "";
+            document.getElementById("userAge").value = userInfo.age || "";
+            document.getElementById("userBio").value = userInfo.bio || "";
+
+            console.log("✅ [페이지 1] 사용자 정보 불러옴:", userInfo);
+            updateStatus("정보 불러옴", "success");
+          } else {
+            alert("저장된 사용자 정보가 없습니다.");
+            updateStatus("정보 없음", "warning");
+          }
+        } catch (error) {
+          console.error("❌ [페이지 1] 사용자 정보 불러오기 실패:", error);
+          updateStatus("불러오기 실패", "error");
+        }
+      }
+
+      /**
+       * 테마 저장
+       */
+      async function saveTheme() {
+        if (!isInitialized) {
+          alert("아직 초기화가 완료되지 않았습니다.");
+          return;
+        }
+
+        const theme = {
+          color: document.getElementById("themeColor").value,
+          fontSize: document.getElementById("fontSize").value,
+          updatedAt: new Date().toISOString(),
+        };
+
+        try {
+          await DataShare.set("app.theme", theme);
+          console.log("✅ [페이지 1] 테마 저장됨:", theme);
+
+          updateCurrentData();
+          updateStatus("테마 저장됨", "success");
+
+          alert("테마가 저장되었습니다!");
+        } catch (error) {
+          console.error("❌ [페이지 1] 테마 저장 실패:", error);
+          updateStatus("저장 실패", "error");
+        }
+      }
+
+      /**
+       * 모든 저장된 데이터 불러오기
+       */
+      async function loadAllData() {
+        try {
+          // 사용자 정보 불러오기
+          const userInfo = DataShare.get("user.profile");
+          if (userInfo) {
+            document.getElementById("userName").value = userInfo.name || "";
+            document.getElementById("userEmail").value = userInfo.email || "";
+            document.getElementById("userAge").value = userInfo.age || "";
+            document.getElementById("userBio").value = userInfo.bio || "";
+          }
+
+          // 테마 불러오기
+          const theme = DataShare.get("app.theme");
+          if (theme) {
+            document.getElementById("themeColor").value = theme.color || "blue";
+            document.getElementById("fontSize").value =
+              theme.fontSize || "medium";
+          }
+
+          updateCurrentData();
+        } catch (error) {
+          console.error("❌ [페이지 1] 데이터 불러오기 실패:", error);
+        }
+      }
+
+      /**
+       * 현재 데이터 표시 업데이트
+       */
+      function updateCurrentData() {
+        const currentDataDiv = document.getElementById("currentData");
+
+        if (!isInitialized) {
+          currentDataDiv.innerHTML = "<em>초기화 중...</em>";
+          return;
+        }
+
+        const allData = DataShare.getAll();
+        const keys = Object.keys(allData);
+
+        if (keys.length === 0) {
+          currentDataDiv.innerHTML = "<em>저장된 데이터가 없습니다.</em>";
+          return;
+        }
+
+        let html = "";
+        keys.forEach((key) => {
+          const value = allData[key];
+          html += `
+            <div class="data-item">
+              <span class="data-key">${key}:</span>
+              <span class="data-value">${JSON.stringify(value, null, 2)}</span>
+            </div>
+          `;
+        });
+
+        currentDataDiv.innerHTML = html;
+      }
+
+      /**
+       * 상태 표시 업데이트
+       */
+      function updateStatus(message, type = "success") {
+        const status = document.getElementById("status");
+        status.textContent = message;
+
+        const colors = {
+          success: "#4caf50",
+          error: "#f44336",
+          warning: "#ff9800",
+        };
+
+        status.style.backgroundColor = colors[type] || colors.success;
+
+        setTimeout(() => {
+          status.textContent = "페이지 1 준비됨";
+          status.style.backgroundColor = colors.success;
+        }, 3000);
+      }
+
+      // 페이지 언로드 시 정리
+      window.addEventListener("beforeunload", function () {
+        console.log("🔄 [페이지 1] 페이지 언로드");
+      });
+    </script>
+  </body>
+</html>

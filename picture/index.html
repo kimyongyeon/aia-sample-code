@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>이미지 블러 처리</title>
+  </head>
+  <body>
+    <input type="file" id="photoInput" accept="image/*" />
+    <br /><br />
+    <img id="preview" style="width: 200px; height: auto" />
+    <canvas id="canvas" style="display: none"></canvas>
+
+    <script>
+      document
+        .getElementById("photoInput")
+        .addEventListener("change", function (e) {
+          const file = e.target.files[0];
+          if (!file) return;
+
+          const reader = new FileReader();
+          reader.onload = function (event) {
+            const img = new Image();
+            img.onload = function () {
+              const canvas = document.getElementById("canvas");
+              const ctx = canvas.getContext("2d");
+
+              canvas.width = img.width;
+              canvas.height = img.height;
+
+              // Canvas Filter API로 블러 적용
+              ctx.filter = "blur(15px)";
+              ctx.drawImage(img, 0, 0);
+              ctx.filter = "none";
+
+              const blurredImageUrl = canvas.toDataURL("image/jpeg");
+              document.getElementById("preview").src = blurredImageUrl;
+            };
+            img.src = event.target.result;
+          };
+          reader.readAsDataURL(file);
+        });
+    </script>
+  </body>
+</html>

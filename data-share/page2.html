@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>페이지 2 - DataShare 테스트</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        min-height: 100vh;
+        padding: 20px;
+      }
+
+      .container {
+        max-width: 800px;
+        margin: 0 auto;
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+      }
+
+      .header {
+        background: linear-gradient(45deg, #11998e, #38ef7d);
+        color: white;
+        padding: 30px;
+        text-align: center;
+      }
+
+      .header h1 {
+        font-size: 2.5rem;
+        margin-bottom: 10px;
+      }
+
+      .header p {
+        font-size: 1.1rem;
+        opacity: 0.9;
+      }
+
+      .nav {
+        background: #f8f9fa;
+        padding: 20px;
+        border-bottom: 1px solid #dee2e6;
+      }
+
+      .nav a {
+        display: inline-block;
+        padding: 10px 20px;
+        margin-right: 10px;
+        background: #007bff;
+        color: white;
+        text-decoration: none;
+        border-radius: 5px;
+        transition: background-color 0.3s;
+      }
+
+      .nav a:hover {
+        background: #0056b3;
+      }
+
+      .nav a.current {
+        background: #28a745;
+      }
+
+      .content {
+        padding: 30px;
+      }
+
+      .section {
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 25px;
+        margin-bottom: 20px;
+        border: 1px solid #e9ecef;
+      }
+
+      .section h2 {
+        color: #495057;
+        margin-bottom: 20px;
+        font-size: 1.4rem;
+        border-bottom: 2px solid #dee2e6;
+        padding-bottom: 10px;
+      }
+
+      .form-group {
+        margin-bottom: 20px;
+      }
+
+      .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+        color: #495057;
+      }
+
+      .form-group input,
+      .form-group textarea,
+      .form-group select {
+        width: 100%;
+        padding: 12px;
+        border: 2px solid #dee2e6;
+        border-radius: 8px;
+        font-size: 14px;
+        transition: border-color 0.3s ease;
+      }
+
+      .form-group input:focus,
+      .form-group textarea:focus,
+      .form-group select:focus {
+        outline: none;
+        border-color: #11998e;
+        box-shadow: 0 0 0 3px rgba(17, 153, 142, 0.1);
+      }
+
+      .btn {
+        background: linear-gradient(45deg, #11998e, #38ef7d);
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 600;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        margin-right: 10px;
+        margin-bottom: 10px;
+      }
+
+      .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(17, 153, 142, 0.4);
+      }
+
+      .btn-danger {
+        background: linear-gradient(45deg, #f44336, #e91e63);
+      }
+
+      .btn-danger:hover {
+        box-shadow: 0 5px 15px rgba(244, 67, 54, 0.4);
+      }
+
+      .data-display {
+        background: #e8f5e8;
+        border: 2px solid #11998e;
+        border-radius: 8px;
+        padding: 15px;
+        margin-top: 15px;
+      }
+
+      .data-display h3 {
+        color: #0d7377;
+        margin-bottom: 10px;
+      }
+
+      .data-item {
+        background: white;
+        padding: 10px;
+        margin: 5px 0;
+        border-radius: 5px;
+        border-left: 4px solid #11998e;
+        font-family: "Courier New", monospace;
+        font-size: 12px;
+      }
+
+      .data-key {
+        font-weight: bold;
+        color: #0d7377;
+      }
+
+      .data-value {
+        color: #424242;
+        margin-left: 10px;
+      }
+
+      .status {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: #11998e;
+        color: white;
+        padding: 10px 20px;
+        border-radius: 20px;
+        font-weight: bold;
+        box-shadow: 0 4px 12px rgba(17, 153, 142, 0.3);
+        z-index: 1000;
+      }
+
+      .info-box {
+        background: #d4edda;
+        border: 1px solid #c3e6cb;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 20px;
+      }
+
+      .info-box h3 {
+        color: #155724;
+        margin-bottom: 10px;
+      }
+
+      .info-box p {
+        color: #155724;
+        margin-bottom: 5px;
+      }
+
+      .preference-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+      }
+
+      @media (max-width: 768px) {
+        .preference-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="status" id="status">페이지 2 로딩 중...</div>
+
+    <div class="container">
+      <div class="header">
+        <h1>📋 페이지 2</h1>
+        <p>IndexedDB 기반 데이터 공유 테스트 - 설정 및 선호도</p>
+      </div>
+
+      <div class="nav">
+        <a href="page1.html">페이지 1</a>
+        <a href="page2.html" class="current">페이지 2</a>
+        <a href="page3.html">페이지 3</a>
+        <a href="dashboard.html">대시보드</a>
+      </div>
+
+      <div class="content">
+        <div class="info-box">
+          <h3>🎯 페이지 2의 역할</h3>
+          <p>• 사용자 설정과 선호도를 관리합니다</p>
+          <p>• 페이지 1에서 입력한 사용자 정보를 확인할 수 있습니다</p>
+          <p>• 임시 데이터(TEMP) 기능을 테스트합니다</p>
+        </div>
+
+        <div class="section">
+          <h2>👤 사용자 정보 확인</h2>
+          <div id="userInfoDisplay">사용자 정보를 불러오는 중...</div>
+          <button class="btn" onclick="refreshUserInfo()">
+            🔄 사용자 정보 새로고침
+          </button>
+        </div>
+
+        <div class="section">
+          <h2>⚙️ 애플리케이션 설정</h2>
+
+          <div class="preference-grid">
+            <div class="form-group">
+              <label for="language">언어 설정</label>
+              <select id="language">
+                <option value="ko">한국어</option>
+                <option value="en">English</option>
+                <option value="ja">日本語</option>
+                <option value="zh">中文</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="timezone">시간대</label>
+              <select id="timezone">
+                <option value="Asia/Seoul">서울 (KST)</option>
+                <option value="America/New_York">뉴욕 (EST)</option>
+                <option value="Europe/London">런던 (GMT)</option>
+                <option value="Asia/Tokyo">도쿄 (JST)</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="notifications">알림 설정</label>
+              <select id="notifications">
+                <option value="all">모든 알림</option>
+                <option value="important">중요 알림만</option>
+                <option value="none">알림 없음</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="autoSave">자동 저장</label>
+              <select id="autoSave">
+                <option value="enabled">활성화</option>
+                <option value="disabled">비활성화</option>
+              </select>
+            </div>
+          </div>
+
+          <button class="btn" onclick="saveSettings()">💾 설정 저장</button>
+          <button class="btn" onclick="loadSettings()">🔄 설정 불러오기</button>
+        </div>
+
+        <div class="section">
+          <h2>⏰ 임시 데이터 테스트</h2>
+
+          <div class="form-group">
+            <label for="tempKey">임시 데이터 키</label>
+            <input
+              type="text"
+              id="tempKey"
+              placeholder="예: session.temp"
+              value="session.temp"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="tempValue">임시 데이터 값</label>
+            <input
+              type="text"
+              id="tempValue"
+              placeholder="임시 저장할 값을 입력하세요"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="tempTtl">생존 시간 (초)</label>
+            <input type="number" id="tempTtl" value="10" min="1" max="300" />
+          </div>
+
+          <button class="btn" onclick="saveTempData()">⏰ 임시 저장</button>
+          <button class="btn" onclick="getTempData()">
+            📤 임시 데이터 조회
+          </button>
+          <button class="btn btn-danger" onclick="clearAllData()">
+            🗑️ 모든 데이터 삭제
+          </button>
+        </div>
+
+        <div class="data-display">
+          <h3>📊 현재 저장된 데이터</h3>
+          <div id="currentData">데이터 로딩 중...</div>
+        </div>
+
+        <div class="section">
+          <h2>📈 데이터 통계</h2>
+          <div id="statsDisplay">통계 로딩 중...</div>
+          <button class="btn" onclick="refreshStats()">📊 통계 새로고침</button>
+        </div>
+      </div>
+    </div>
+
+    <script src="DataSharePersistent.js"></script>
+    <script>
+      "use strict";
+
+      let isInitialized = false;
+
+      // 페이지 로드 시 초기화
+      document.addEventListener("DOMContentLoaded", async function () {
+        console.log("🎯 [페이지 2] DOM 로딩 완료");
+
+        try {
+          // DataShare 초기화 대기
+          await DataShare.init();
+
+          console.log("✅ [페이지 2] DataShare 초기화 완료");
+          DataShare.setDevMode(true);
+
+          // 저장된 데이터 불러오기
+          await loadAllData();
+          await refreshStats();
+
+          // 상태 업데이트
+          updateStatus("페이지 2 준비됨", "success");
+
+          isInitialized = true;
+        } catch (error) {
+          console.error("❌ [페이지 2] 초기화 실패:", error);
+          updateStatus("초기화 실패", "error");
+        }
+      });
+
+      /**
+       * 사용자 정보 새로고침
+       */
+      function refreshUserInfo() {
+        const userInfo = DataShare.get("user.profile");
+        const userInfoDiv = document.getElementById("userInfoDisplay");
+
+        if (userInfo) {
+          userInfoDiv.innerHTML = `
+            <div class="data-item">
+              <div><strong>이름:</strong> ${userInfo.name || "없음"}</div>
+              <div><strong>이메일:</strong> ${userInfo.email || "없음"}</div>
+              <div><strong>나이:</strong> ${userInfo.age || "없음"}세</div>
+              <div><strong>자기소개:</strong> ${userInfo.bio || "없음"}</div>
+              <div><strong>업데이트:</strong> ${
+                userInfo.updatedAt
+                  ? new Date(userInfo.updatedAt).toLocaleString()
+                  : "없음"
+              }</div>
+            </div>
+          `;
+        } else {
+          userInfoDiv.innerHTML =
+            '<div class="data-item">저장된 사용자 정보가 없습니다. 페이지 1에서 정보를 입력해주세요.</div>';
+        }
+      }
+
+      /**
+       * 설정 저장
+       */
+      async function saveSettings() {
+        if (!isInitialized) {
+          alert("아직 초기화가 완료되지 않았습니다.");
+          return;
+        }
+
+        const settings = {
+          language: document.getElementById("language").value,
+          timezone: document.getElementById("timezone").value,
+          notifications: document.getElementById("notifications").value,
+          autoSave: document.getElementById("autoSave").value,
+          updatedAt: new Date().toISOString(),
+        };
+
+        try {
+          await DataShare.set("app.settings", settings);
+          console.log("✅ [페이지 2] 설정 저장됨:", settings);
+
+          updateCurrentData();
+          updateStatus("설정 저장됨", "success");
+
+          alert("설정이 저장되었습니다!");
+        } catch (error) {
+          console.error("❌ [페이지 2] 설정 저장 실패:", error);
+          updateStatus("저장 실패", "error");
+          alert("저장에 실패했습니다: " + error.message);
+        }
+      }
+
+      /**
+       * 설정 불러오기
+       */
+      function loadSettings() {
+        try {
+          const settings = DataShare.get("app.settings");
+
+          if (settings) {
+            document.getElementById("language").value =
+              settings.language || "ko";
+            document.getElementById("timezone").value =
+              settings.timezone || "Asia/Seoul";
+            document.getElementById("notifications").value =
+              settings.notifications || "all";
+            document.getElementById("autoSave").value =
+              settings.autoSave || "enabled";
+
+            console.log("✅ [페이지 2] 설정 불러옴:", settings);
+            updateStatus("설정 불러옴", "success");
+          } else {
+            alert("저장된 설정이 없습니다.");
+            updateStatus("설정 없음", "warning");
+          }
+        } catch (error) {
+          console.error("❌ [페이지 2] 설정 불러오기 실패:", error);
+          updateStatus("불러오기 실패", "error");
+        }
+      }
+
+      /**
+       * 임시 데이터 저장
+       */
+      function saveTempData() {
+        if (!isInitialized) {
+          alert("아직 초기화가 완료되지 않았습니다.");
+          return;
+        }
+
+        const key = document.getElementById("tempKey").value.trim();
+        const value = document.getElementById("tempValue").value.trim();
+        const ttl =
+          parseInt(document.getElementById("tempTtl").value) * 1000 || 10000;
+
+        if (!key || !value) {
+          alert("키와 값을 모두 입력해주세요.");
+          return;
+        }
+
+        try {
+          DataShare.temp(key, value, ttl);
+          console.log(
+            `✅ [페이지 2] 임시 데이터 저장: ${key} = ${value} (TTL: ${ttl}ms)`
+          );
+
+          updateCurrentData();
+          updateStatus(`임시 저장됨 (${ttl / 1000}초)`, "success");
+
+          alert(
+            `임시 데이터가 저장되었습니다! ${ttl / 1000}초 후 자동 삭제됩니다.`
+          );
+        } catch (error) {
+          console.error("❌ [페이지 2] 임시 데이터 저장 실패:", error);
+          updateStatus("저장 실패", "error");
+        }
+      }
+
+      /**
+       * 임시 데이터 조회
+       */
+      function getTempData() {
+        const key = document.getElementById("tempKey").value.trim();
+
+        if (!key) {
+          alert("키를 입력해주세요.");
+          return;
+        }
+
+        try {
+          const value = DataShare.get(key);
+
+          if (value !== undefined) {
+            alert(`임시 데이터: ${JSON.stringify(value)}`);
+            updateStatus("데이터 조회됨", "success");
+          } else {
+            alert("해당 키의 데이터가 없거나 만료되었습니다.");
+            updateStatus("데이터 없음", "warning");
+          }
+        } catch (error) {
+          console.error("❌ [페이지 2] 임시 데이터 조회 실패:", error);
+          updateStatus("조회 실패", "error");
+        }
+      }
+
+      /**
+       * 모든 데이터 삭제
+       */
+      async function clearAllData() {
+        if (!isInitialized) {
+          alert("아직 초기화가 완료되지 않았습니다.");
+          return;
+        }
+
+        if (
+          confirm(
+            "정말로 모든 데이터를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다."
+          )
+        ) {
+          try {
+            await DataShare.clear();
+            console.log("✅ [페이지 2] 모든 데이터 삭제됨");
+
+            updateCurrentData();
+            refreshUserInfo();
+            await refreshStats();
+            updateStatus("모든 데이터 삭제됨", "success");
+
+            alert("모든 데이터가 삭제되었습니다.");
+          } catch (error) {
+            console.error("❌ [페이지 2] 데이터 삭제 실패:", error);
+            updateStatus("삭제 실패", "error");
+          }
+        }
+      }
+
+      /**
+       * 모든 저장된 데이터 불러오기
+       */
+      async function loadAllData() {
+        try {
+          // 사용자 정보 표시
+          refreshUserInfo();
+
+          // 설정 불러오기
+          const settings = DataShare.get("app.settings");
+          if (settings) {
+            document.getElementById("language").value =
+              settings.language || "ko";
+            document.getElementById("timezone").value =
+              settings.timezone || "Asia/Seoul";
+            document.getElementById("notifications").value =
+              settings.notifications || "all";
+            document.getElementById("autoSave").value =
+              settings.autoSave || "enabled";
+          }
+
+          updateCurrentData();
+        } catch (error) {
+          console.error("❌ [페이지 2] 데이터 불러오기 실패:", error);
+        }
+      }
+
+      /**
+       * 통계 새로고침
+       */
+      async function refreshStats() {
+        try {
+          const stats = await DataShare.getStats();
+          const statsDiv = document.getElementById("statsDisplay");
+
+          statsDiv.innerHTML = `
+            <div class="data-item">
+              <div><strong>메모리 캐시 키 수:</strong> ${stats.memoryKeys}</div>
+              <div><strong>IndexedDB 키 수:</strong> ${stats.indexedDBKeys}</div>
+              <div><strong>활성 감시자 수:</strong> ${stats.watchers}</div>
+              <div><strong>임시 데이터 수:</strong> ${stats.tempData}</div>
+            </div>
+          `;
+        } catch (error) {
+          console.error("❌ [페이지 2] 통계 조회 실패:", error);
+          document.getElementById("statsDisplay").innerHTML =
+            '<div class="data-item">통계 조회 실패</div>';
+        }
+      }
+
+      /**
+       * 현재 데이터 표시 업데이트
+       */
+      function updateCurrentData() {
+        const currentDataDiv = document.getElementById("currentData");
+
+        if (!isInitialized) {
+          currentDataDiv.innerHTML = "<em>초기화 중...</em>";
+          return;
+        }
+
+        const allData = DataShare.getAll();
+        const keys = Object.keys(allData);
+
+        if (keys.length === 0) {
+          currentDataDiv.innerHTML = "<em>저장된 데이터가 없습니다.</em>";
+          return;
+        }
+
+        let html = "";
+        keys.forEach((key) => {
+          const value = allData[key];
+          html += `
+            <div class="data-item">
+              <span class="data-key">${key}:</span>
+              <span class="data-value">${JSON.stringify(value, null, 2)}</span>
+            </div>
+          `;
+        });
+
+        currentDataDiv.innerHTML = html;
+      }
+
+      /**
+       * 상태 표시 업데이트
+       */
+      function updateStatus(message, type = "success") {
+        const status = document.getElementById("status");
+        status.textContent = message;
+
+        const colors = {
+          success: "#11998e",
+          error: "#f44336",
+          warning: "#ff9800",
+        };
+
+        status.style.backgroundColor = colors[type] || colors.success;
+
+        setTimeout(() => {
+          status.textContent = "페이지 2 준비됨";
+          status.style.backgroundColor = colors.success;
+        }, 3000);
+      }
+
+      // 페이지 언로드 시 정리
+      window.addEventListener("beforeunload", function () {
+        console.log("🔄 [페이지 2] 페이지 언로드");
+      });
+    </script>
+  </body>
+</html>

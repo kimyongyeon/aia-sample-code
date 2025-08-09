@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DataShare 유틸리티 테스트 (인라인 버전)</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 20px;
+      }
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+      }
+
+      .header {
+        background: linear-gradient(45deg, #2196f3, #21cbf3);
+        color: white;
+        padding: 30px;
+        text-align: center;
+      }
+
+      .header h1 {
+        font-size: 2.5rem;
+        margin-bottom: 10px;
+      }
+
+      .header p {
+        font-size: 1.1rem;
+        opacity: 0.9;
+      }
+
+      .content {
+        padding: 30px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 30px;
+      }
+
+      .section {
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 25px;
+        border: 1px solid #e9ecef;
+      }
+
+      .section h2 {
+        color: #495057;
+        margin-bottom: 20px;
+        font-size: 1.4rem;
+        border-bottom: 2px solid #dee2e6;
+        padding-bottom: 10px;
+      }
+
+      .form-group {
+        margin-bottom: 20px;
+      }
+
+      .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+        color: #495057;
+      }
+
+      .form-group input,
+      .form-group textarea,
+      .form-group select {
+        width: 100%;
+        padding: 12px;
+        border: 2px solid #dee2e6;
+        border-radius: 8px;
+        font-size: 14px;
+        transition: border-color 0.3s ease;
+      }
+
+      .form-group input:focus,
+      .form-group textarea:focus,
+      .form-group select:focus {
+        outline: none;
+        border-color: #2196f3;
+        box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.1);
+      }
+
+      .btn {
+        background: linear-gradient(45deg, #2196f3, #21cbf3);
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 600;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        margin-right: 10px;
+        margin-bottom: 10px;
+      }
+
+      .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(33, 150, 243, 0.4);
+      }
+
+      .btn-danger {
+        background: linear-gradient(45deg, #f44336, #e91e63);
+      }
+
+      .btn-danger:hover {
+        box-shadow: 0 5px 15px rgba(244, 67, 54, 0.4);
+      }
+
+      .btn-success {
+        background: linear-gradient(45deg, #4caf50, #8bc34a);
+      }
+
+      .btn-success:hover {
+        box-shadow: 0 5px 15px rgba(76, 175, 80, 0.4);
+      }
+
+      .output {
+        background: #1a1a1a;
+        color: #00ff00;
+        padding: 20px;
+        border-radius: 8px;
+        font-family: "Courier New", monospace;
+        font-size: 13px;
+        line-height: 1.6;
+        max-height: 300px;
+        overflow-y: auto;
+        margin-top: 15px;
+        border: 2px solid #333;
+      }
+
+      .output .log-entry {
+        margin-bottom: 8px;
+        padding: 5px 0;
+        border-bottom: 1px solid #333;
+      }
+
+      .output .log-time {
+        color: #888;
+        font-size: 11px;
+      }
+
+      .output .log-action {
+        color: #00bfff;
+        font-weight: bold;
+      }
+
+      .output .log-key {
+        color: #ffff00;
+      }
+
+      .output .log-value {
+        color: #00ff00;
+      }
+
+      .current-data {
+        background: #e3f2fd;
+        border: 2px solid #2196f3;
+        border-radius: 8px;
+        padding: 15px;
+        margin-top: 15px;
+      }
+
+      .current-data h3 {
+        color: #1976d2;
+        margin-bottom: 10px;
+      }
+
+      .data-item {
+        background: white;
+        padding: 10px;
+        margin: 5px 0;
+        border-radius: 5px;
+        border-left: 4px solid #2196f3;
+        font-family: "Courier New", monospace;
+        font-size: 12px;
+      }
+
+      .data-key {
+        font-weight: bold;
+        color: #1976d2;
+      }
+
+      .data-value {
+        color: #424242;
+        margin-left: 10px;
+      }
+
+      .status {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: #4caf50;
+        color: white;
+        padding: 10px 20px;
+        border-radius: 20px;
+        font-weight: bold;
+        box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+        z-index: 1000;
+      }
+
+      @media (max-width: 768px) {
+        .content {
+          grid-template-columns: 1fr;
+          gap: 20px;
+        }
+
+        .header h1 {
+          font-size: 2rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="status" id="status">DataShare 준비됨</div>
+
+    <div class="container">
+      <div class="header">
+        <h1>🚀 DataShare 유틸리티 테스트 (인라인 버전)</h1>
+        <p>SPA 환경을 위한 메모리 기반 반응형 데이터 공유 시스템</p>
+      </div>
+
+      <div class="content">
+        <!-- 데이터 조작 섹션 -->
+        <div class="section">
+          <h2>📝 데이터 조작</h2>
+
+          <div class="form-group">
+            <label for="setKey">키 (Key)</label>
+            <input
+              type="text"
+              id="setKey"
+              placeholder="예: user.name, app.theme"
+              value="user.name"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="setValue">값 (Value)</label>
+            <textarea
+              id="setValue"
+              rows="3"
+              placeholder='예: "홍길동", {"age": 25}, [1,2,3]'
+            >
+홍길동</textarea
+            >
+          </div>
+
+          <button class="btn" onclick="testSet()">📥 SET (저장)</button>
+          <button class="btn" onclick="testGet()">📤 GET (조회)</button>
+          <button class="btn btn-danger" onclick="testClear()">
+            🗑️ CLEAR (삭제)
+          </button>
+
+          <div class="form-group" style="margin-top: 20px">
+            <label for="tempTtl">임시 데이터 TTL (밀리초)</label>
+            <input
+              type="number"
+              id="tempTtl"
+              value="5000"
+              min="1000"
+              max="300000"
+            />
+          </div>
+
+          <button class="btn btn-success" onclick="testTemp()">
+            ⏰ TEMP (임시 저장)
+          </button>
+          <button class="btn btn-danger" onclick="testClearAll()">
+            💥 CLEAR ALL (전체 삭제)
+          </button>
+
+          <div class="current-data">
+            <h3>📊 현재 저장된 데이터</h3>
+            <div id="currentData">데이터가 없습니다.</div>
+          </div>
+        </div>
+
+        <!-- 감시 및 로그 섹션 -->
+        <div class="section">
+          <h2>👀 감시 (Watch) 및 로그</h2>
+
+          <div class="form-group">
+            <label for="watchKey">감시할 키</label>
+            <input
+              type="text"
+              id="watchKey"
+              placeholder="예: user.*, app.theme"
+              value="user.*"
+            />
+          </div>
+
+          <button class="btn" onclick="testWatch()">👁️ WATCH 시작</button>
+          <button class="btn btn-danger" onclick="testUnwatch()">
+            ❌ WATCH 중지
+          </button>
+          <button class="btn" onclick="clearLogs()">🧹 로그 지우기</button>
+
+          <div class="output" id="output">
+            <div class="log-entry">
+              <span class="log-time">[시작]</span>
+              <span class="log-action"
+                >DataShare 유틸리티가 준비되었습니다.</span
+              >
+            </div>
+          </div>
+
+          <div style="margin-top: 20px">
+            <h3>🔧 개발자 옵션</h3>
+            <label>
+              <input type="checkbox" id="devMode" onchange="toggleDevMode()" />
+              개발 모드 (콘솔 로깅)
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      "use strict";
+
+      console.log("🚀 [HTML] DataShare 인라인 버전 시작");
+
+      // DataShare 클래스 정의 (인라인)
+      class DataShare {
+        constructor() {
+          this._data = {};
+          this._watchers = {};
+          this._tempData = {};
+          this._isDevMode = false;
+        }
+
+        setDevMode(enabled) {
+          this._isDevMode = enabled;
+          if (enabled) {
+            console.log("[DataShare] 개발 모드가 활성화되었습니다.");
+          }
+        }
+
+        set(key, value) {
+          if (!key || typeof key !== "string") {
+            throw new Error("키는 문자열이어야 합니다.");
+          }
+
+          const oldValue = this._data[key];
+          this._data[key] = value;
+
+          if (this._isDevMode) {
+            console.log(`[DataShare] SET: ${key}`, {
+              oldValue,
+              newValue: value,
+            });
+          }
+
+          this._notify(key, value, oldValue);
+        }
+
+        get(key) {
+          if (!key || typeof key !== "string") {
+            throw new Error("키는 문자열이어야 합니다.");
+          }
+
+          const value = this._data[key];
+
+          if (this._isDevMode) {
+            console.log(`[DataShare] GET: ${key}`, value);
+          }
+
+          return value;
+        }
+
+        watch(keys, callback) {
+          if (!callback || typeof callback !== "function") {
+            throw new Error("콜백은 함수여야 합니다.");
+          }
+
+          const keyArray = Array.isArray(keys) ? keys : [keys];
+          const unsubscribeFunctions = [];
+
+          keyArray.forEach((key) => {
+            if (!this._watchers[key]) {
+              this._watchers[key] = [];
+            }
+
+            const watcherInfo = {
+              callback,
+              id: Date.now() + Math.random(),
+            };
+
+            this._watchers[key].push(watcherInfo);
+
+            if (this._isDevMode) {
+              console.log(`[DataShare] WATCH 등록: ${key}`);
+            }
+
+            unsubscribeFunctions.push(() => {
+              const index = this._watchers[key].findIndex(
+                (w) => w.id === watcherInfo.id
+              );
+              if (index !== -1) {
+                this._watchers[key].splice(index, 1);
+                if (this._isDevMode) {
+                  console.log(`[DataShare] WATCH 해제: ${key}`);
+                }
+              }
+            });
+          });
+
+          return () => {
+            unsubscribeFunctions.forEach((unsubscribe) => unsubscribe());
+          };
+        }
+
+        clear(key) {
+          if (key) {
+            if (this._data.hasOwnProperty(key)) {
+              const oldValue = this._data[key];
+              delete this._data[key];
+
+              if (this._isDevMode) {
+                console.log(`[DataShare] CLEAR: ${key}`, oldValue);
+              }
+
+              this._notify(key, undefined, oldValue);
+            }
+          } else {
+            const keys = Object.keys(this._data);
+            this._data = {};
+
+            if (this._isDevMode) {
+              console.log("[DataShare] CLEAR ALL:", keys);
+            }
+
+            keys.forEach((k) => this._notify(k, undefined, this._data[k]));
+          }
+        }
+
+        temp(key, value, ttl = 300000) {
+          this.set(key, value);
+
+          if (this._tempData[key]) {
+            clearTimeout(this._tempData[key]);
+          }
+
+          this._tempData[key] = setTimeout(() => {
+            this.clear(key);
+            delete this._tempData[key];
+
+            if (this._isDevMode) {
+              console.log(`[DataShare] TEMP 자동 삭제: ${key}`);
+            }
+          }, ttl);
+
+          if (this._isDevMode) {
+            console.log(`[DataShare] TEMP 설정: ${key}, TTL: ${ttl}ms`);
+          }
+        }
+
+        getAll() {
+          return { ...this._data };
+        }
+
+        getKeys() {
+          return Object.keys(this._data);
+        }
+
+        getKeysByPattern(pattern) {
+          const regex = new RegExp(pattern.replace("*", ".*"));
+          return Object.keys(this._data).filter((key) => regex.test(key));
+        }
+
+        _notify(key, newValue, oldValue) {
+          if (this._watchers[key]) {
+            this._watchers[key].forEach((watcher) => {
+              try {
+                watcher.callback(newValue, oldValue, key);
+              } catch (error) {
+                console.error(`[DataShare] 콜백 실행 중 오류 발생:`, error);
+              }
+            });
+          }
+
+          Object.keys(this._watchers).forEach((watchKey) => {
+            if (watchKey.includes("*")) {
+              const regex = new RegExp(watchKey.replace("*", ".*"));
+              if (regex.test(key)) {
+                this._watchers[watchKey].forEach((watcher) => {
+                  try {
+                    watcher.callback(newValue, oldValue, key);
+                  } catch (error) {
+                    console.error(
+                      `[DataShare] 패턴 콜백 실행 중 오류 발생:`,
+                      error
+                    );
+                  }
+                });
+              }
+            }
+          });
+        }
+      }
+
+      // DataShare 인스턴스 생성 및 전역 노출
+      console.log("✅ [HTML] DataShare 클래스 정의 완료");
+
+      try {
+        const dataShareInstance = new DataShare();
+        window.DataShare = dataShareInstance;
+
+        console.log(
+          "✅ [HTML] DataShare 인스턴스 생성 완료:",
+          window.DataShare
+        );
+        console.log(
+          "✅ [HTML] DataShare 메서드들:",
+          Object.getOwnPropertyNames(window.DataShare)
+        );
+
+        // 메서드 존재 여부 확인
+        const requiredMethods = [
+          "set",
+          "get",
+          "watch",
+          "clear",
+          "getAll",
+          "setDevMode",
+        ];
+        const missingMethods = requiredMethods.filter(
+          (method) => typeof window.DataShare[method] !== "function"
+        );
+
+        if (missingMethods.length === 0) {
+          console.log("✅ [HTML] 모든 필수 메서드가 정상적으로 존재합니다.");
+        } else {
+          console.error("❌ [HTML] 누락된 메서드들:", missingMethods);
+        }
+
+        // 간단한 테스트
+        window.DataShare.set("test", "init");
+        const testValue = window.DataShare.get("test");
+        if (testValue === "init") {
+          console.log("✅ [HTML] DataShare 기본 기능 테스트 통과");
+          window.DataShare.clear("test");
+        } else {
+          console.error("❌ [HTML] DataShare 기본 기능 테스트 실패");
+        }
+      } catch (error) {
+        console.error("❌ [HTML] DataShare 인스턴스 생성 실패:", error);
+        window.DataShare = null;
+      }
+
+      let watchUnsubscribe = null;
+      let logCounter = 0;
+
+      // 페이지 로드 시 초기화
+      document.addEventListener("DOMContentLoaded", function () {
+        console.log("🎯 [HTML] DOM 로딩 완료, DataShare 초기화 시작");
+
+        // DataShare 객체 상태 확인
+        console.log("🔍 [HTML] DataShare 상태 확인:", {
+          exists: typeof window.DataShare !== "undefined",
+          hasGetAll:
+            window.DataShare && typeof window.DataShare.getAll === "function",
+          hasSet:
+            window.DataShare && typeof window.DataShare.set === "function",
+        });
+
+        if (typeof window.DataShare !== "undefined" && window.DataShare) {
+          updateCurrentData();
+          addLog("시스템", "DataShare 유틸리티 초기화 완료 (인라인 버전)");
+
+          // 개발 모드 기본 활성화
+          document.getElementById("devMode").checked = true;
+          DataShare.setDevMode(true);
+        } else {
+          console.error("❌ [HTML] DataShare 객체가 없습니다!");
+          addLog("ERROR", "DataShare 초기화 실패");
+        }
+
+        // 자동 테스트 시나리오 실행
+        setTimeout(() => {
+          if (typeof window.DataShare !== "undefined" && window.DataShare) {
+            addLog("AUTO", "자동 테스트 시나리오를 시작합니다...");
+
+            // 1. 기본 데이터 설정
+            DataShare.set("app.name", "DataShare 테스트 앱 (인라인)");
+            DataShare.set("user.profile", { name: "테스트 사용자", age: 25 });
+            DataShare.set("settings.theme", "dark");
+
+            updateCurrentData();
+            addLog("AUTO", "초기 테스트 데이터가 설정되었습니다.");
+
+            // 2. 감시 설정
+            setTimeout(() => {
+              document.getElementById("watchKey").value = "user.*";
+              testWatch();
+            }, 1000);
+          } else {
+            console.error(
+              "❌ [AUTO] DataShare가 준비되지 않아 자동 테스트를 건너뜁니다."
+            );
+            addLog("ERROR", "자동 테스트 건너뜀 - DataShare 없음");
+          }
+        }, 1000);
+      });
+
+      /**
+       * 로그 추가 함수
+       */
+      function addLog(action, message, key = "", value = "") {
+        const output = document.getElementById("output");
+        const time = new Date().toLocaleTimeString();
+        logCounter++;
+
+        const logEntry = document.createElement("div");
+        logEntry.className = "log-entry";
+        logEntry.innerHTML = `
+        <span class="log-time">[${time}]</span>
+        <span class="log-action">${action}</span>
+        ${key ? `<span class="log-key">${key}</span>` : ""}
+        ${
+          value ? `<span class="log-value">${JSON.stringify(value)}</span>` : ""
+        }
+        <span>${message}</span>
+      `;
+
+        output.insertBefore(logEntry, output.firstChild);
+
+        // 로그가 너무 많아지면 오래된 것 제거
+        if (output.children.length > 50) {
+          output.removeChild(output.lastChild);
+        }
+      }
+
+      /**
+       * 현재 데이터 표시 업데이트
+       */
+      function updateCurrentData() {
+        const currentDataDiv = document.getElementById("currentData");
+
+        // DataShare 객체가 존재하고 getAll 메서드가 있는지 확인
+        if (
+          typeof window.DataShare === "undefined" ||
+          !window.DataShare ||
+          typeof window.DataShare.getAll !== "function"
+        ) {
+          console.warn(
+            "[updateCurrentData] DataShare가 아직 준비되지 않았습니다."
+          );
+          currentDataDiv.innerHTML = "<em>DataShare 로딩 중...</em>";
+          return;
+        }
+
+        const allData = DataShare.getAll();
+        const keys = Object.keys(allData);
+
+        if (keys.length === 0) {
+          currentDataDiv.innerHTML = "<em>데이터가 없습니다.</em>";
+          return;
+        }
+
+        let html = "";
+        keys.forEach((key) => {
+          const value = allData[key];
+          html += `
+          <div class="data-item">
+            <span class="data-key">${key}:</span>
+            <span class="data-value">${JSON.stringify(value, null, 2)}</span>
+          </div>
+        `;
+        });
+
+        currentDataDiv.innerHTML = html;
+      }
+
+      /**
+       * SET 테스트
+       */
+      function testSet() {
+        const key = document.getElementById("setKey").value.trim();
+        const valueStr = document.getElementById("setValue").value.trim();
+
+        if (!key) {
+          alert("키를 입력해주세요.");
+          return;
+        }
+
+        try {
+          let value;
+          // JSON 파싱 시도
+          try {
+            value = JSON.parse(valueStr);
+          } catch (e) {
+            // JSON이 아니면 문자열로 처리
+            value = valueStr;
+          }
+
+          DataShare.set(key, value);
+          addLog("SET", "데이터가 저장되었습니다.", key, value);
+          updateCurrentData();
+          updateStatus("데이터 저장됨", "success");
+        } catch (error) {
+          addLog("ERROR", error.message);
+          updateStatus("저장 실패", "error");
+        }
+      }
+
+      /**
+       * GET 테스트
+       */
+      function testGet() {
+        const key = document.getElementById("setKey").value.trim();
+
+        if (!key) {
+          alert("키를 입력해주세요.");
+          return;
+        }
+
+        try {
+          const value = DataShare.get(key);
+          addLog("GET", "데이터를 조회했습니다.", key, value);
+
+          if (value !== undefined) {
+            document.getElementById("setValue").value =
+              typeof value === "string"
+                ? value
+                : JSON.stringify(value, null, 2);
+            updateStatus("데이터 조회됨", "success");
+          } else {
+            updateStatus("데이터 없음", "warning");
+          }
+        } catch (error) {
+          addLog("ERROR", error.message);
+          updateStatus("조회 실패", "error");
+        }
+      }
+
+      /**
+       * CLEAR 테스트
+       */
+      function testClear() {
+        const key = document.getElementById("setKey").value.trim();
+
+        if (!key) {
+          alert("키를 입력해주세요.");
+          return;
+        }
+
+        try {
+          DataShare.clear(key);
+          addLog("CLEAR", "데이터가 삭제되었습니다.", key);
+          updateCurrentData();
+          updateStatus("데이터 삭제됨", "success");
+        } catch (error) {
+          addLog("ERROR", error.message);
+          updateStatus("삭제 실패", "error");
+        }
+      }
+
+      /**
+       * CLEAR ALL 테스트
+       */
+      function testClearAll() {
+        if (confirm("모든 데이터를 삭제하시겠습니까?")) {
+          try {
+            DataShare.clear();
+            addLog("CLEAR ALL", "모든 데이터가 삭제되었습니다.");
+            updateCurrentData();
+            updateStatus("전체 삭제됨", "success");
+          } catch (error) {
+            addLog("ERROR", error.message);
+            updateStatus("삭제 실패", "error");
+          }
+        }
+      }
+
+      /**
+       * TEMP 테스트
+       */
+      function testTemp() {
+        const key = document.getElementById("setKey").value.trim();
+        const valueStr = document.getElementById("setValue").value.trim();
+        const ttl = parseInt(document.getElementById("tempTtl").value) || 5000;
+
+        if (!key) {
+          alert("키를 입력해주세요.");
+          return;
+        }
+
+        try {
+          let value;
+          try {
+            value = JSON.parse(valueStr);
+          } catch (e) {
+            value = valueStr;
+          }
+
+          DataShare.temp(key, value, ttl);
+          addLog(
+            "TEMP",
+            `임시 데이터가 저장되었습니다. (TTL: ${ttl}ms)`,
+            key,
+            value
+          );
+          updateCurrentData();
+          updateStatus(`임시 저장됨 (${ttl / 1000}초)`, "success");
+        } catch (error) {
+          addLog("ERROR", error.message);
+          updateStatus("임시 저장 실패", "error");
+        }
+      }
+
+      /**
+       * WATCH 테스트
+       */
+      function testWatch() {
+        const watchKey = document.getElementById("watchKey").value.trim();
+
+        if (!watchKey) {
+          alert("감시할 키를 입력해주세요.");
+          return;
+        }
+
+        // 기존 감시 해제
+        if (watchUnsubscribe) {
+          watchUnsubscribe();
+        }
+
+        try {
+          watchUnsubscribe = DataShare.watch(
+            watchKey,
+            function (newValue, oldValue, key) {
+              addLog("WATCH", `데이터 변경 감지`, key, {
+                old: oldValue,
+                new: newValue,
+              });
+              updateCurrentData();
+            }
+          );
+
+          addLog("WATCH", `감시 시작`, watchKey);
+          updateStatus(`감시 중: ${watchKey}`, "watching");
+        } catch (error) {
+          addLog("ERROR", error.message);
+          updateStatus("감시 시작 실패", "error");
+        }
+      }
+
+      /**
+       * WATCH 해제 테스트
+       */
+      function testUnwatch() {
+        if (watchUnsubscribe) {
+          watchUnsubscribe();
+          watchUnsubscribe = null;
+          addLog("UNWATCH", "감시가 중지되었습니다.");
+          updateStatus("감시 중지됨", "success");
+        } else {
+          addLog("INFO", "활성화된 감시가 없습니다.");
+          updateStatus("감시 없음", "warning");
+        }
+      }
+
+      /**
+       * 개발 모드 토글
+       */
+      function toggleDevMode() {
+        const devMode = document.getElementById("devMode").checked;
+        DataShare.setDevMode(devMode);
+        addLog("SYSTEM", `개발 모드: ${devMode ? "활성화" : "비활성화"}`);
+      }
+
+      /**
+       * 로그 지우기
+       */
+      function clearLogs() {
+        const output = document.getElementById("output");
+        output.innerHTML =
+          '<div class="log-entry"><span class="log-time">[지워짐]</span><span class="log-action">로그가 지워졌습니다.</span></div>';
+        logCounter = 0;
+      }
+
+      /**
+       * 상태 표시 업데이트
+       */
+      function updateStatus(message, type = "success") {
+        const status = document.getElementById("status");
+        status.textContent = message;
+
+        // 색상 변경
+        const colors = {
+          success: "#4caf50",
+          error: "#f44336",
+          warning: "#ff9800",
+          watching: "#2196F3",
+        };
+
+        status.style.backgroundColor = colors[type] || colors.success;
+
+        // 3초 후 기본 상태로 복원
+        setTimeout(() => {
+          status.textContent = "DataShare 준비됨";
+          status.style.backgroundColor = colors.success;
+        }, 3000);
+      }
+    </script>
+  </body>
+</html>
