@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <script src="./sessionUtil.js"></script>
+    <script>
+      // 즉시 구조분해 + IIFE 호출
+      (() => {
+        const { callSession, getSession, setSession, delSession, withSession } =
+          window.SessionAdapter;
+
+        // POST
+        (async () => {
+          const res = await callSession(
+            "/session/user/profile",
+            "post",
+            null,
+            { id: 1, name: "Yong", role: "AA" },
+            { ttlMs: 10 * 60 * 1000 }
+          );
+          console.log("saved?", res);
+        })();
+
+        // GET
+        (async () => {
+          const value = await callSession("/session/user/profile", "get");
+          console.log("profile", value);
+        })();
+
+        // PUT (merge)
+        (async () => {
+          const res = await callSession("/session/user/profile", "put", null, {
+            role: "Architect",
+          });
+          console.log("merged?", res);
+        })();
+
+        // DELETE
+        (async () => {
+          const res = await callSession("/session/user/profile", "delete");
+          console.log("deleted", res);
+        })();
+
+        // prefix 일괄 삭제
+        (async () => {
+          const res = await callSession("/session/user/*", "delete");
+          console.log("bulk deleted", res);
+        })();
+
+        // 동기 편의 + IIFE
+        (() => {
+          setSession("/cart", { items: [1, 2, 3] });
+          const cart = getSession("/cart");
+          console.log("cart", cart);
+          delSession("/cart");
+        })();
+
+        // 원자적 업데이트
+        (() => {
+          const next = withSession("/counter", (draft = { n: 0 }) => {
+            draft.n += 1;
+            return draft;
+          });
+          console.log("counter ->", next);
+        })();
+      })();
+    </script>
+  </body>
+</html>

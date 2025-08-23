@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>IndexedDB + WASM(HNSW) Vector Search Demo</title>
+    <style>
+      :root {
+        font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto,
+          Noto Sans, Helvetica, Arial, Apple Color Emoji, Segoe UI Emoji;
+      }
+      body {
+        margin: 0;
+        padding: 24px;
+        background: #0b1020;
+        color: #e7ecff;
+      }
+      h1 {
+        margin: 0 0 12px;
+        font-size: 20px;
+      }
+      .wrap {
+        display: grid;
+        grid-template-columns: 360px 1fr;
+        gap: 16px;
+      }
+      .card {
+        background: #111737;
+        border: 1px solid #273058;
+        border-radius: 16px;
+        padding: 16px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+      }
+      textarea,
+      input,
+      select,
+      button {
+        width: 100%;
+        box-sizing: border-box;
+        background: #0c1230;
+        color: #e7ecff;
+        border: 1px solid #273058;
+        border-radius: 12px;
+        padding: 10px 12px;
+      }
+      textarea {
+        min-height: 140px;
+        resize: vertical;
+      }
+      button {
+        cursor: pointer;
+      }
+      .row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+      }
+      .muted {
+        color: #a9b3d6;
+        font-size: 12px;
+      }
+      .badge {
+        display: inline-block;
+        font-size: 12px;
+        padding: 2px 8px;
+        border-radius: 999px;
+        border: 1px solid #273058;
+        background: #0f1636;
+      }
+      .result {
+        padding: 12px;
+        border: 1px dashed #33407a;
+        border-radius: 12px;
+        margin-bottom: 8px;
+        background: #0f1430;
+      }
+      code {
+        background: #0d1230;
+        padding: 0 6px;
+        border-radius: 6px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>IndexedDB + WASM(HNSW) 벡터 검색 데모</h1>
+    <p class="muted">
+      브라우저만으로 벡터를 저장/인덱싱/검색하는 예시입니다.
+      <span class="badge">IndexedDB</span>에 문서와 임베딩을 저장하고,
+      <span class="badge">HNSW (WASM)</span>으로 근사 최근접 검색을 수행합니다.
+      WASM 로딩 실패 시 자동으로 <b>브루트포스 코사인</b>으로 폴백합니다.
+    </p>
+    <div class="wrap">
+      <div class="card">
+        <h3>① 문서 추가</h3>
+        <textarea id="docsInput" placeholder="한 줄에 한 문서씩 입력하세요.">
+계약 해지는 서면 통보로 진행됩니다.
+서비스 해약 절차는 마이페이지에서 신청할 수 있습니다.
+정기 구독을 종료하려면 결제일 하루 전에 해지를 요청하세요.
+환불 요청은 결제 후 7일 이내 가능합니다.
+카드사 승인 취소는 영업일 기준 3일 걸립니다.
+배송 지연 시 알림 문자가 발송됩니다.
+택배 배송 조회는 운송장 번호로 확인하세요.
+요금 청구서는 매월 1일 발행됩니다.
+요금제를 변경하면 다음 달부터 적용됩니다.
+비밀번호는 최소 10자 이상으로 설정하세요.
+이상 로그인 시 계정이 잠길 수 있습니다.
+2단계 인증을 활성화하면 보안이 강화됩니다.</textarea
+        >
+        <div class="row" style="margin-top: 8px">
+          <select id="dimSel">
+            <option value="256">차원: 256</option>
+            <option value="384">차원: 384</option>
+            <option value="512">차원: 512</option>
+          </select>
+          <select id="metricSel">
+            <option value="cosine">코사인</option>
+            <option value="l2">L2 (유클리드)</option>
+            <option value="ip">Inner Product</option>
+          </select>
+        </div>
+        <div class="row" style="margin-top: 8px">
+          <button id="btnAddDocs">문서 추가 & 저장</button>
+          <button id="btnBuildIndex">HNSW 인덱스 빌드</button>
+        </div>
+        <p class="muted" id="statusText" style="margin-top: 8px">
+          상태: 초기화
+        </p>
+        <details style="margin-top: 8px">
+          <summary>고급설정 (HNSW)</summary>
+          <div class="row" style="margin-top: 8px">
+            <input
+              id="M"
+              type="number"
+              value="16"
+              placeholder="M (그래프 연결도)"
+            />
+            <input
+              id="efC"
+              type="number"
+              value="100"
+              placeholder="efConstruction"
+            />
+          </div>
+          <div class="row" style="margin-top: 8px">
+            <input id="efS" type="number" value="64" placeholder="efSearch" />
+            <input
+              id="maxEl"
+              type="number"
+              value="10000"
+              placeholder="최대 요소 수"
+            />
+          </div>
+        </details>
+        <details style="margin-top: 8px">
+          <summary>WASM 로딩 옵션</summary>
+          <p class="muted">
+            아래 경로를 적절한 WASM 번들로 바꾸세요. hnswlib-wasm 호환 ESM
+            번들을 가정합니다.
+          </p>
+          <input id="wasmUrl" value="/hnswlib-wasm/hnswlib.js" />
+          <button id="btnLoadWasm" style="margin-top: 8px">
+            WASM 모듈 로드
+          </button>
+          <p class="muted" id="wasmStatus">WASM: 미로딩 (폴백=브루트포스)</p>
+        </details>
+      </div>
+
+      <div class="card">
+        <h3>② 검색</h3>
+        <input id="q" placeholder="예) 해약 절차가 어떻게 되나요?" />
+        <div class="row" style="margin-top: 8px">
+          <input id="topK" type="number" value="5" />
+          <button id="btnSearch">검색</button>
+        </div>
+        <div class="row" style="margin-top: 8px">
+          <label style="display: flex; align-items: center; gap: 8px">
+            <input id="useWasm" type="checkbox" checked /> WASM(HNSW) 사용
+            (미로딩 시 자동 폴백)
+          </label>
+        </div>
+        <p class="muted" id="latency"></p>
+        <div id="results"></div>
+      </div>
+    </div>
+
+    <script type="module">
+      /*************************************************
+       * 0) 간단한 유틸
+       *************************************************/
+      const $ = (sel) => document.querySelector(sel);
+      const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+      // L2 normalize
+      function l2normalize(vec) {
+        let sum = 0.0;
+        for (let i = 0; i < vec.length; i++) sum += vec[i] * vec[i];
+        const n = Math.sqrt(sum) + 1e-8;
+        for (let i = 0; i < vec.length; i++) vec[i] /= n;
+        return vec;
+      }
+
+      function cosine(a, b) {
+        let dot = 0,
+          na = 0,
+          nb = 0;
+        for (let i = 0; i < a.length; i++) {
+          const x = a[i],
+            y = b[i];
+          dot += x * y;
+          na += x * x;
+          nb += y * y;
+        }
+        return dot / (Math.sqrt(na) * Math.sqrt(nb) + 1e-8);
+      }
+
+      function l2(a, b) {
+        let s = 0;
+        for (let i = 0; i < a.length; i++) {
+          const d = a[i] - b[i];
+          s += d * d;
+        }
+        return Math.sqrt(s);
+      }
+
+      function inner(a, b) {
+        let s = 0;
+        for (let i = 0; i < a.length; i++) {
+          s += a[i] * b[i];
+        }
+        return s;
+      }
+
+      /*************************************************
+       * 1) IndexedDB 래퍼
+       *************************************************/
+      const DB_NAME = "vector-demo";
+      const DB_VERSION = 1;
+      const STORE_DOCS = "docs"; // {id, text, emb:ArrayBuffer(Float32)}
+      const STORE_INDEX = "hnswIndex"; // serialized index blob
+
+      function openDB() {
+        return new Promise((resolve, reject) => {
+          const req = indexedDB.open(DB_NAME, DB_VERSION);
+          req.onupgradeneeded = (e) => {
+            const db = req.result;
+            if (!db.objectStoreNames.contains(STORE_DOCS)) {
+              const os = db.createObjectStore(STORE_DOCS, { keyPath: "id" });
+              os.createIndex("by_id", "id", { unique: true });
+            }
+            if (!db.objectStoreNames.contains(STORE_INDEX)) {
+              db.createObjectStore(STORE_INDEX, { keyPath: "key" });
+            }
+          };
+          req.onsuccess = () => resolve(req.result);
+          req.onerror = () => reject(req.error);
+        });
+      }
+
+      async function putDocs(db, docs) {
+        return new Promise((resolve, reject) => {
+          const tx = db.transaction([STORE_DOCS], "readwrite");
+          const os = tx.objectStore(STORE_DOCS);
+          docs.forEach((d) => os.put(d));
+          tx.oncomplete = () => resolve();
+          tx.onerror = () => reject(tx.error);
+        });
+      }
+
+      async function getAllDocs(db) {
+        return new Promise((resolve, reject) => {
+          const tx = db.transaction([STORE_DOCS], "readonly");
+          const os = tx.objectStore(STORE_DOCS);
+          const req = os.getAll();
+          req.onsuccess = () => resolve(req.result);
+          req.onerror = () => reject(req.error);
+        });
+      }
+
+      async function saveIndex(db, key, buf) {
+        return new Promise((resolve, reject) => {
+          const tx = db.transaction([STORE_INDEX], "readwrite");
+          tx.objectStore(STORE_INDEX).put({ key, buf });
+          tx.oncomplete = () => resolve();
+          tx.onerror = () => reject(tx.error);
+        });
+      }
+
+      async function loadIndex(db, key) {
+        return new Promise((resolve, reject) => {
+          const tx = db.transaction([STORE_INDEX], "readonly");
+          const req = tx.objectStore(STORE_INDEX).get(key);
+          req.onsuccess = () => resolve(req.result?.buf || null);
+          req.onerror = () => reject(req.error);
+        });
+      }
+
+      /*************************************************
+       * 2) 토이 임베딩 함수 (데모용)
+       * - 해시 트릭 기반 1-3gram bag → dim 차원 float32
+       * - 실제 서비스에서는 서버에서 임베딩 계산 권장
+       *************************************************/
+      function hashStr(str) {
+        // FNV-1a
+        let h = 2166136261 >>> 0;
+        for (let i = 0; i < str.length; i++) {
+          h ^= str.charCodeAt(i);
+          h = Math.imul(h, 16777619);
+        }
+        return h >>> 0;
+      }
+
+      function embed(text, dim = 256) {
+        const v = new Float32Array(dim);
+        const s = text.toLowerCase();
+        const grams = new Set();
+        for (let n = 1; n <= 3; n++) {
+          for (let i = 0; i <= s.length - n; i++) grams.add(s.slice(i, i + n));
+        }
+        grams.forEach((g) => {
+          const idx = hashStr(g) % dim;
+          v[idx] += 1.0;
+        });
+        return l2normalize(v);
+      }
+
+      /*************************************************
+       * 3) HNSW WASM 어댑터 (동적 로드)
+       * - hnswlib-wasm 호환 API 가정
+       * - 실패 시 null 반환 → 브루트포스 사용
+       *************************************************/
+      let HNSW = null; // { init, addPoint, searchKnn, serialize, deserialize }
+
+      async function loadHNSW(url) {
+        try {
+          const mod = await import(url);
+          if (!mod || !mod.default) return null;
+          const api = await mod.default();
+          return api; // 구현체마다 다를 수 있어 사용처에서 가드
+        } catch (e) {
+          console.warn("WASM load failed:", e);
+          return null;
+        }
+      }
+
+      /*************************************************
+       * 4) 상태 및 이벤트 바인딩
+       *************************************************/
+      const db = await openDB();
+      $("#statusText").textContent = "상태: DB 오픈 완료";
+
+      let DIM = parseInt($("#dimSel").value, 10);
+      let METRIC = $("#metricSel").value; // 'cosine' | 'l2' | 'ip'
+
+      $("#dimSel").addEventListener(
+        "change",
+        (e) => (DIM = parseInt(e.target.value, 10))
+      );
+      $("#metricSel").addEventListener(
+        "change",
+        (e) => (METRIC = e.target.value)
+      );
+
+      $("#btnLoadWasm").addEventListener("click", async () => {
+        const url = $("#wasmUrl").value.trim();
+        $("#wasmStatus").textContent = "WASM: 로딩 중...";
+        HNSW = await loadHNSW(url);
+        $("#wasmStatus").textContent = HNSW
+          ? "WASM: 로딩 완료 ✅"
+          : "WASM: 로딩 실패 → 폴백 사용";
+      });
+
+      // 문서 추가 & 저장
+      $("#btnAddDocs").addEventListener("click", async () => {
+        const lines = $("#docsInput")
+          .value.split(/\n+/)
+          .map((s) => s.trim())
+          .filter(Boolean);
+        const docs = lines.map((text, i) => {
+          const id = "doc_" + Math.random().toString(36).slice(2, 10);
+          const emb = embed(text, DIM);
+          return { id, text, emb: emb.buffer };
+        });
+        await putDocs(db, docs);
+        $(
+          "#statusText"
+        ).textContent = `상태: 문서 ${docs.length}건 저장 (차원=${DIM})`;
+      });
+
+      // 인덱스 빌드 (WASM 있으면 HNSW로, 없으면 저장만)
+      $("#btnBuildIndex").addEventListener("click", async () => {
+        const M = parseInt($("#M").value, 10);
+        const efConstruction = parseInt($("#efC").value, 10);
+        const maxElements = parseInt($("#maxEl").value, 10);
+
+        const all = await getAllDocs(db);
+        if (!all.length) {
+          alert("먼저 문서를 추가하세요.");
+          return;
+        }
+
+        const start = performance.now();
+
+        if (HNSW && HNSW.createIndex) {
+          // 가상의 hnswlib-wasm 호환 API 예시
+          const index = HNSW.createIndex({
+            dim: DIM,
+            space: METRIC,
+            maxElements,
+            M,
+            efConstruction,
+          });
+          for (const d of all) {
+            index.addPoint(new Float32Array(d.emb), d.id);
+          }
+          index.setEf(parseInt($("#efS").value, 10));
+          const buf = index.serialize();
+          await saveIndex(db, `hnsw_${DIM}_${METRIC}`, buf);
+          $("#statusText").textContent = `상태: HNSW 인덱스 빌드/저장 완료 (${(
+            performance.now() - start
+          ).toFixed(1)} ms)`;
+        } else {
+          // 폴백: 브루트포스만 사용할 예정 → 문서만 있으면 됨
+          await saveIndex(db, `hnsw_${DIM}_${METRIC}`, new ArrayBuffer(0));
+          $("#statusText").textContent = `상태: WASM 없음 → 폴백 모드 설정 (${(
+            performance.now() - start
+          ).toFixed(1)} ms)`;
+        }
+      });
+
+      // 검색
+      $("#btnSearch").addEventListener("click", async () => {
+        const q = $("#q").value.trim();
+        if (!q) return;
+        const topK = parseInt($("#topK").value, 10) || 5;
+        const useWasm = $("#useWasm").checked && HNSW;
+        const qv = embed(q, DIM);
+
+        const all = await getAllDocs(db);
+        if (!all.length) {
+          alert("문서를 먼저 추가하세요.");
+          return;
+        }
+
+        const t0 = performance.now();
+
+        let results = [];
+        if (useWasm && HNSW && HNSW.createIndex) {
+          const buf = await loadIndex(db, `hnsw_${DIM}_${METRIC}`);
+          if (!buf) {
+            alert("HNSW 인덱스가 없습니다. 먼저 빌드하세요.");
+            return;
+          }
+          const index = HNSW.deserialize(buf);
+          index.setEf(parseInt($("#efS").value, 10));
+          const out = index.searchKnn(qv, topK); // { labels:[], distances:[] }
+          const byId = new Map(all.map((d) => [d.id, d]));
+          for (let i = 0; i < out.labels.length; i++) {
+            const id = out.labels[i];
+            const dist = out.distances[i];
+            results.push({
+              id,
+              score: metricToScore(METRIC, dist),
+              text: byId.get(id)?.text || "",
+            });
+          }
+        } else {
+          // 폴백: 전수 코사인/내적/L2
+          const metric = METRIC;
+          const scorer = (a, b) =>
+            metric === "cosine"
+              ? cosine(a, b)
+              : metric === "ip"
+              ? inner(a, b)
+              : -l2(a, b);
+          const arr = [];
+          for (const d of all) {
+            const score = scorer(qv, new Float32Array(d.emb));
+            arr.push({ id: d.id, text: d.text, score });
+          }
+          arr.sort((a, b) => b.score - a.score);
+          results = arr.slice(0, topK);
+        }
+
+        const elapsed = performance.now() - t0;
+        $("#latency").textContent = `검색 지연: ${elapsed.toFixed(1)} ms (${
+          useWasm ? "HNSW/WASM" : "폴백(브루트포스)"
+        })`;
+        renderResults(results);
+      });
+
+      function metricToScore(metric, dist) {
+        // HNSW 구현체별로 distance 의미가 다를 수 있으니 가변 처리
+        if (metric === "cosine") return 1.0 - dist; // 보통 코사인 거리를 쓰는 경우
+        if (metric === "l2") return -dist;
+        return -dist; // ip는 구현체가 -dot을 거리로 반환하는 경우가 있음
+      }
+
+      function renderResults(items) {
+        const root = $("#results");
+        root.innerHTML = "";
+        for (const r of items) {
+          const el = document.createElement("div");
+          el.className = "result";
+          el.innerHTML = `<div class="muted">ID: <code>${
+            r.id
+          }</code> · score: <b>${r.score.toFixed(4)}</b></div>
+                        <div style="margin-top:6px;">${escapeHtml(
+                          r.text
+                        )}</div>`;
+          root.appendChild(el);
+        }
+      }
+
+      function escapeHtml(s) {
+        return s.replace(
+          /[&<>"']/g,
+          (c) =>
+            ({
+              "&": "&amp;",
+              "<": "&lt;",
+              ">": "&gt;",
+              '"': "&quot;",
+              "'": "&#39;",
+            }[c])
+        );
+      }
+    </script>
+
+    <!--
+    📦 실제 WASM 바인딩에 대해
+    - 위에서 wasmUrl 입력란에 hnswlib-wasm 호환 ESM 번들의 경로를 넣으세요.
+    - 예시 API를 가정했습니다(createIndex/deserialize/searchKnn/serialize 등). 사용하는 번들에 맞춰 함수명을 맞추세요.
+    - WASM 로딩이 실패하면 자동으로 브루트포스(전수)로 검색합니다. 소규모(≤10k)에서는 이것만으로도 충분히 빠릅니다.
+
+    🧠 실제 서비스 권장
+    - 문서 임베딩은 서버에서 계산 후 브라우저로 전달(이 데모는 해시 트릭 기반 토이 임베딩)
+    - 대규모(>50k)부터는 서버/엣지의 벡터DB(예: Qdrant/Milvus/Pinecone/pgvector) + ANN 권장
+  --></body>
+</html>
