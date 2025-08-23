@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SessionUtil 테스트</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+      .test-section {
+        border: 1px solid #ccc;
+        margin: 10px 0;
+        padding: 15px;
+        border-radius: 5px;
+      }
+      .result {
+        background: #f5f5f5;
+        padding: 10px;
+        margin: 10px 0;
+        border-radius: 3px;
+        white-space: pre-wrap;
+      }
+      button {
+        background: #007bff;
+        color: white;
+        border: none;
+        padding: 10px 15px;
+        margin: 5px;
+        border-radius: 3px;
+        cursor: pointer;
+      }
+      button:hover {
+        background: #0056b3;
+      }
+      .clear-btn {
+        background: #dc3545;
+      }
+      .clear-btn:hover {
+        background: #c82333;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>SessionUtil 테스트</h1>
+
+    <div class="test-section">
+      <h3>기존 호출 방식 테스트</h3>
+      <button onclick="testOriginalCallSession()">
+        callSession 테스트 (DELETE)
+      </button>
+      <button onclick="testOriginalCallSessionPost()">
+        callSession 테스트 (POST)
+      </button>
+      <button onclick="testOriginalCallSessionGet()">
+        callSession 테스트 (GET)
+      </button>
+      <button onclick="testOriginalCallSessionSync()">
+        callSessionSync 테스트
+      </button>
+      <button onclick="testDeleteOnly()">DELETE만 단독 테스트</button>
+      <div id="original-result" class="result"></div>
+    </div>
+
+    <div class="test-section">
+      <h3>SessionStorage 내용 확인</h3>
+      <button onclick="showSessionStorage()">SessionStorage 내용 보기</button>
+      <button onclick="clearSessionStorage()" class="clear-btn">
+        SessionStorage 초기화
+      </button>
+      <div id="storage-result" class="result"></div>
+    </div>
+
+    <script src="sessionUtil.js"></script>
+    <script>
+      "use strict";
+
+      function log(elementId, message) {
+        const element = document.getElementById(elementId);
+        element.textContent +=
+          new Date().toLocaleTimeString() + ": " + message + "\n";
+      }
+
+      function clearLog(elementId) {
+        document.getElementById(elementId).textContent = "";
+      }
+
+      // 기존 호출 방식 테스트 - DELETE
+      function testOriginalCallSession() {
+        clearLog("original-result");
+        log("original-result", "=== callSession DELETE 테스트 시작 ===");
+
+        // 먼저 데이터를 저장
+        comUtil.callSession(
+          "claimInfo",
+          { name: "테스트", value: 123 },
+          "save",
+          "POST",
+          function (saveResult) {
+            log(
+              "original-result",
+              "1. POST 결과: " + JSON.stringify(saveResult)
+            );
+
+            // 저장 후 조회해서 데이터 확인
+            comUtil.callSession(
+              "claimInfo",
+              {},
+              "load",
+              "GET",
+              function (getResult) {
+                log(
+                  "original-result",
+                  "2. 저장 후 GET 결과: " + JSON.stringify(getResult)
+                );
+
+                // 그 다음 삭제
+                comUtil.callSession(
+                  "claimInfo",
+                  {},
+                  "delete/claimInfo",
+                  "DELETE",
+                  function (deleteResult) {
+                    log(
+                      "original-result",
+                      "3. DELETE 결과: " + JSON.stringify(deleteResult)
+                    );
+
+                    // 삭제 후 다시 조회해서 삭제되었는지 확인
+                    comUtil.callSession(
+                      "claimInfo",
+                      {},
+                      "load",
+                      "GET",
+                      function (getAfterDeleteResult) {
+                        log(
+                          "original-result",
+                          "4. 삭제 후 GET 결과: " +
+                            JSON.stringify(getAfterDeleteResult)
+                        );
+                        log("original-result", "=== DELETE 테스트 완료 ===");
+                      }
+                    );
+                  }
+                );
+              }
+            );
+          }
+        );
+      }
+
+      // 기존 호출 방식 테스트 - POST
+      function testOriginalCallSessionPost() {
+        clearLog("original-result");
+        log("original-result", "=== callSession POST 테스트 시작 ===");
+
+        const testData = {
+          name: "김철수",
+          age: 30,
+          city: "서울",
+        };
+
+        comUtil.callSession(
+          "userInfo",
+          testData,
+          "save",
+          "POST",
+          function (result) {
+            log("original-result", "POST 결과: " + JSON.stringify(result));
+          }
+        );
+      }
+
+      // 기존 호출 방식 테스트 - GET
+      function testOriginalCallSessionGet() {
+        clearLog("original-result");
+        log("original-result", "=== callSession GET 테스트 시작 ===");
+
+        comUtil.callSession("userInfo", {}, "load", "GET", function (result) {
+          log("original-result", "GET 결과: " + JSON.stringify(result));
+        });
+      }
+
+      // 기존 호출 방식 테스트 - Sync
+      function testOriginalCallSessionSync() {
+        clearLog("original-result");
+        log("original-result", "=== callSessionSync 테스트 시작 ===");
+
+        // 동기식으로 데이터 저장
+        const saveResult = comUtil.callSessionSync(
+          "syncTest",
+          { sync: true, time: new Date() },
+          "save",
+          "POST"
+        );
+        log("original-result", "Sync POST 결과: " + JSON.stringify(saveResult));
+
+        // 동기식으로 데이터 조회
+        const getResult = comUtil.callSessionSync(
+          "syncTest",
+          {},
+          "load",
+          "GET"
+        );
+        log("original-result", "Sync GET 결과: " + JSON.stringify(getResult));
+      }
+
+      // DELETE만 단독으로 테스트
+      function testDeleteOnly() {
+        clearLog("original-result");
+        log("original-result", "=== DELETE 단독 테스트 시작 ===");
+
+        // 먼저 테스트용 데이터를 직접 저장
+        sessionStorage.setItem(
+          "SS:deleteTest",
+          JSON.stringify({ __exp: null, data: { test: "삭제될 데이터" } })
+        );
+        log("original-result", "1. 직접 저장 완료: deleteTest");
+
+        // sessionStorage 확인
+        const stored = sessionStorage.getItem("SS:deleteTest");
+        log("original-result", "2. 저장된 데이터: " + stored);
+
+        // DELETE 호출
+        comUtil.callSession(
+          "deleteTest",
+          {},
+          "delete",
+          "DELETE",
+          function (deleteResult) {
+            log(
+              "original-result",
+              "3. DELETE 결과: " + JSON.stringify(deleteResult)
+            );
+
+            // 삭제 후 sessionStorage 직접 확인
+            const afterDelete = sessionStorage.getItem("SS:deleteTest");
+            log("original-result", "4. 삭제 후 직접 확인: " + afterDelete);
+
+            // GET으로도 확인
+            comUtil.callSession(
+              "deleteTest",
+              {},
+              "load",
+              "GET",
+              function (getResult) {
+                log(
+                  "original-result",
+                  "5. GET으로 확인: " + JSON.stringify(getResult)
+                );
+                log("original-result", "=== DELETE 단독 테스트 완료 ===");
+              }
+            );
+          }
+        );
+      }
+
+      // SessionStorage 내용 보기
+      function showSessionStorage() {
+        clearLog("storage-result");
+        log("storage-result", "=== SessionStorage 내용 ===");
+
+        if (sessionStorage.length === 0) {
+          log("storage-result", "저장된 데이터가 없습니다.");
+          return;
+        }
+
+        for (let i = 0; i < sessionStorage.length; i++) {
+          const key = sessionStorage.key(i);
+          const value = sessionStorage.getItem(key);
+          log("storage-result", `${key}: ${value}`);
+        }
+      }
+
+      // SessionStorage 초기화
+      function clearSessionStorage() {
+        sessionStorage.clear();
+        log("storage-result", "SessionStorage가 초기화되었습니다.");
+      }
+
+      // 페이지 로드 시 SessionStorage 내용 표시
+      window.addEventListener("load", function () {
+        showSessionStorage();
+      });
+    </script>
+  </body>
+</html>
