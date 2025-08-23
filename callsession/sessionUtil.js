@@ -320,6 +320,15 @@ window.SessionAdapter = {
   // 기존 호출 방식과 호환되는 함수들
   callSessionCompat,
   callSessionSyncCompat,
+  // Promise 기반 새로운 함수들
+  postSession,
+  getSessionAsync,
+  deleteSession,
+  putSession,
+  batchSession,
+  // Promise 기반 통합 함수들
+  sessionRequest,
+  sessionCall,
 };
 
 // comUtil 네임스페이스가 있다면 거기에도 추가
@@ -330,3 +339,174 @@ if (typeof window.comUtil === "undefined") {
 // 기존 호출 방식 그대로 사용할 수 있도록 함수 등록
 window.comUtil.callSession = callSessionCompat;
 window.comUtil.callSessionSync = callSessionSyncCompat;
+
+// Promise 기반 새로운 함수들도 comUtil에 추가
+window.comUtil.postSession = postSession;
+window.comUtil.getSessionAsync = getSessionAsync;
+window.comUtil.deleteSession = deleteSession;
+window.comUtil.putSession = putSession;
+window.comUtil.batchSession = batchSession;
+
+// Promise 기반 통합 함수들도 comUtil에 추가
+window.comUtil.sessionRequest = sessionRequest;
+window.comUtil.sessionCall = sessionCall;
+
+/**
+ * Promise 기반 새로운 세션 함수들
+ */
+
+/**
+ * Promise 기반 POST 함수 - 데이터 저장
+ * @param {string} key - 저장할 키
+ * @param {any} data - 저장할 데이터
+ * @param {Object} options - 옵션 (ttlMs: TTL 시간)
+ * @returns {Promise<Object>} - { ok: true, data: 저장된데이터 }
+ */
+async function postSession(key, data, options = {}) {
+  try {
+    setSession(key, data, options.ttlMs);
+    return { ok: true, data: data };
+  } catch (error) {
+    return { ok: false, error: error.message };
+  }
+}
+
+/**
+ * Promise 기반 GET 함수 - 데이터 조회
+ * @param {string} key - 조회할 키
+ * @returns {Promise<Object>} - { ok: true, data: 조회된데이터 }
+ */
+async function getSessionAsync(key) {
+  try {
+    const data = getSession(key);
+    return { ok: true, data: data };
+  } catch (error) {
+    return { ok: false, error: error.message };
+  }
+}
+
+/**
+ * Promise 기반 DELETE 함수 - 데이터 삭제
+ * @param {string} key - 삭제할 키 (끝에 /*를 붙이면 prefix 삭제)
+ * @returns {Promise<Object>} - { ok: true, deleted?: 삭제된개수 }
+ */
+async function deleteSession(key) {
+  try {
+    const deleted = delSession(key);
+    return { ok: true, deleted: deleted };
+  } catch (error) {
+    return { ok: false, error: error.message };
+  }
+}
+
+/**
+ * Promise 기반 PUT 함수 - 데이터 병합 저장
+ * @param {string} key - 저장할 키
+ * @param {any} data - 병합할 데이터
+ * @param {Object} options - 옵션 (ttlMs: TTL 시간, merge: 병합 여부)
+ * @returns {Promise<Object>} - { ok: true, data: 병합된데이터 }
+ */
+async function putSession(key, data, options = { merge: true }) {
+  try {
+    let result = data;
+
+    if (options.merge !== false) {
+      const existingData = getSession(key);
+      if (
+        existingData &&
+        typeof existingData === "object" &&
+        !Array.isArray(existingData) &&
+        typeof data === "object" &&
+        !Array.isArray(data)
+      ) {
+        result = { ...existingData, ...data };
+      }
+    }
+
+    setSession(key, result, options.ttlMs);
+    return { ok: true, data: result };
+  } catch (error) {
+    return { ok: false, error: error.message };
+  }
+}
+
+/**
+ * Promise 기반 일괄 처리 함수
+ * @param {Array} operations - 처리할 작업 배열 [{method, key, data, options}]
+ * @returns {Promise<Array>} - 각 작업의 결과 배열
+ */
+async function batchSession(operations) {
+  const results = [];
+
+  for (const op of operations) {
+    try {
+      let result;
+      switch (op.method?.toLowerCase()) {
+        case "get":
+          result = await getSessionAsync(op.key);
+          break;
+        case "post":
+          result = await postSession(op.key, op.data, op.options);
+          break;
+        case "put":
+          result = await putSession(op.key, op.data, op.options);
+          break;
+        case "delete":
+          result = await deleteSession(op.key);
+          break;
+        default:
+          result = { ok: false, error: `지원하지 않는 메소드: ${op.method}` };
+      }
+      results.push(result);
+    } catch (error) {
+      results.push({ ok: false, error: error.message });
+    }
+  }
+
+  return results;
+}
+
+/**
+ * Promise 기반 통합 세션 함수 - 기존 방식처럼 method를 파라미터로 받음
+ * @param {string} key - 세션 키
+ * @param {any} data - 데이터 (GET, DELETE 시에는 무시됨)
+ * @param {string} method - HTTP 메소드 ("GET", "POST", "PUT", "DELETE")
+ * @param {Object} options - 옵션 (ttlMs: TTL 시간, merge: 병합 여부)
+ * @returns {Promise<Object>} - 처리 결과
+ */
+async function sessionRequest(key, data, method = "GET", options = {}) {
+  try {
+    const methodType = method.toUpperCase();
+
+    switch (methodType) {
+      case "GET":
+        return await getSessionAsync(key);
+
+      case "POST":
+        return await postSession(key, data, options);
+
+      case "PUT":
+        return await putSession(key, data, options);
+
+      case "DELETE":
+        return await deleteSession(key);
+
+      default:
+        return { ok: false, error: `지원하지 않는 메소드: ${method}` };
+    }
+  } catch (error) {
+    return { ok: false, error: error.message };
+  }
+}
+
+/**
+ * Promise 기반 통합 세션 함수 - 더 간단한 버전 (기존 callSession과 유사한 인터페이스)
+ * @param {string} key - 세션 키
+ * @param {any} data - 데이터
+ * @param {string} method - HTTP 메소드
+ * @param {Object} options - 옵션
+ * @returns {Promise<Object>} - 처리 결과
+ */
+async function sessionCall(key, data = null, method = "GET", options = {}) {
+  return await sessionRequest(key, data, method, options);
+}

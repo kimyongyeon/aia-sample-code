@@ -66,6 +66,19 @@
     </div>
 
     <div class="test-section">
+      <h3>새로운 Promise 기반 함수 테스트</h3>
+      <button onclick="testPromisePost()">Promise POST 테스트</button>
+      <button onclick="testPromiseGet()">Promise GET 테스트</button>
+      <button onclick="testPromiseDelete()">Promise DELETE 테스트</button>
+      <button onclick="testPromisePut()">Promise PUT 테스트</button>
+      <button onclick="testPromiseBatch()">Promise BATCH 테스트</button>
+      <button onclick="testPromiseAsyncAwait()">async/await 테스트</button>
+      <button onclick="testSessionRequest()">통합 sessionRequest 테스트</button>
+      <button onclick="testSessionCall()">통합 sessionCall 테스트</button>
+      <div id="promise-result" class="result"></div>
+    </div>
+
+    <div class="test-section">
       <h3>SessionStorage 내용 확인</h3>
       <button onclick="showSessionStorage()">SessionStorage 내용 보기</button>
       <button onclick="clearSessionStorage()" class="clear-btn">
@@ -279,6 +292,261 @@
       function clearSessionStorage() {
         sessionStorage.clear();
         log("storage-result", "SessionStorage가 초기화되었습니다.");
+      }
+
+      // Promise 기반 함수 테스트들
+
+      function logPromise(message) {
+        const element = document.getElementById("promise-result");
+        element.textContent +=
+          new Date().toLocaleTimeString() + ": " + message + "\n";
+      }
+
+      function clearPromiseLog() {
+        document.getElementById("promise-result").textContent = "";
+      }
+
+      // Promise POST 테스트
+      function testPromisePost() {
+        clearPromiseLog();
+        logPromise("=== Promise POST 테스트 시작 ===");
+
+        const testData = { name: "홍길동", age: 25, city: "부산" };
+
+        comUtil
+          .postSession("promiseUser", testData)
+          .then((result) => {
+            logPromise("POST 결과: " + JSON.stringify(result));
+          })
+          .catch((error) => {
+            logPromise("POST 에러: " + error);
+          });
+      }
+
+      // Promise GET 테스트
+      function testPromiseGet() {
+        clearPromiseLog();
+        logPromise("=== Promise GET 테스트 시작 ===");
+
+        comUtil
+          .getSessionAsync("promiseUser")
+          .then((result) => {
+            logPromise("GET 결과: " + JSON.stringify(result));
+          })
+          .catch((error) => {
+            logPromise("GET 에러: " + error);
+          });
+      }
+
+      // Promise DELETE 테스트
+      function testPromiseDelete() {
+        clearPromiseLog();
+        logPromise("=== Promise DELETE 테스트 시작 ===");
+
+        // 먼저 데이터 저장
+        comUtil
+          .postSession("deleteTarget", { temp: "data" })
+          .then((postResult) => {
+            logPromise("1. POST 결과: " + JSON.stringify(postResult));
+            return comUtil.deleteSession("deleteTarget");
+          })
+          .then((deleteResult) => {
+            logPromise("2. DELETE 결과: " + JSON.stringify(deleteResult));
+            return comUtil.getSessionAsync("deleteTarget");
+          })
+          .then((getResult) => {
+            logPromise("3. 삭제 후 GET 결과: " + JSON.stringify(getResult));
+          })
+          .catch((error) => {
+            logPromise("DELETE 테스트 에러: " + error);
+          });
+      }
+
+      // Promise PUT 테스트
+      function testPromisePut() {
+        clearPromiseLog();
+        logPromise("=== Promise PUT 테스트 시작 ===");
+
+        const initialData = { name: "김철수", age: 30 };
+        const updateData = { city: "서울", age: 31 };
+
+        comUtil
+          .postSession("putTarget", initialData)
+          .then((postResult) => {
+            logPromise("1. 초기 POST: " + JSON.stringify(postResult));
+            return comUtil.putSession("putTarget", updateData);
+          })
+          .then((putResult) => {
+            logPromise("2. PUT 병합 결과: " + JSON.stringify(putResult));
+            return comUtil.getSessionAsync("putTarget");
+          })
+          .then((getResult) => {
+            logPromise("3. 최종 GET 결과: " + JSON.stringify(getResult));
+          })
+          .catch((error) => {
+            logPromise("PUT 테스트 에러: " + error);
+          });
+      }
+
+      // Promise BATCH 테스트
+      function testPromiseBatch() {
+        clearPromiseLog();
+        logPromise("=== Promise BATCH 테스트 시작 ===");
+
+        const operations = [
+          { method: "post", key: "batch1", data: { type: "first" } },
+          { method: "post", key: "batch2", data: { type: "second" } },
+          { method: "get", key: "batch1" },
+          { method: "put", key: "batch1", data: { updated: true } },
+          { method: "delete", key: "batch2" },
+        ];
+
+        comUtil
+          .batchSession(operations)
+          .then((results) => {
+            logPromise("BATCH 결과:");
+            results.forEach((result, index) => {
+              logPromise(
+                `  ${index + 1}. ${operations[index].method}: ${JSON.stringify(
+                  result
+                )}`
+              );
+            });
+          })
+          .catch((error) => {
+            logPromise("BATCH 테스트 에러: " + error);
+          });
+      }
+
+      // async/await 테스트
+      async function testPromiseAsyncAwait() {
+        clearPromiseLog();
+        logPromise("=== async/await 테스트 시작 ===");
+
+        try {
+          // 저장
+          const postResult = await comUtil.postSession("asyncTest", {
+            message: "async/await로 저장됨",
+            timestamp: new Date().toISOString(),
+          });
+          logPromise("1. await POST: " + JSON.stringify(postResult));
+
+          // 조회
+          const getResult = await comUtil.getSessionAsync("asyncTest");
+          logPromise("2. await GET: " + JSON.stringify(getResult));
+
+          // 업데이트
+          const putResult = await comUtil.putSession("asyncTest", {
+            updated: true,
+            updateTime: new Date().toISOString(),
+          });
+          logPromise("3. await PUT: " + JSON.stringify(putResult));
+
+          // 최종 조회
+          const finalResult = await comUtil.getSessionAsync("asyncTest");
+          logPromise("4. 최종 GET: " + JSON.stringify(finalResult));
+
+          logPromise("=== async/await 테스트 완료 ===");
+        } catch (error) {
+          logPromise("async/await 테스트 에러: " + error.message);
+        }
+      }
+
+      // 통합 sessionRequest 테스트
+      async function testSessionRequest() {
+        clearPromiseLog();
+        logPromise("=== sessionRequest 통합 테스트 시작 ===");
+
+        try {
+          // POST - 데이터 저장
+          const postResult = await comUtil.sessionRequest(
+            "requestTest",
+            { name: "통합테스트", type: "sessionRequest" },
+            "POST"
+          );
+          logPromise("1. POST: " + JSON.stringify(postResult));
+
+          // GET - 데이터 조회
+          const getResult = await comUtil.sessionRequest(
+            "requestTest",
+            null,
+            "GET"
+          );
+          logPromise("2. GET: " + JSON.stringify(getResult));
+
+          // PUT - 데이터 병합
+          const putResult = await comUtil.sessionRequest(
+            "requestTest",
+            { updated: true, version: 2 },
+            "PUT"
+          );
+          logPromise("3. PUT: " + JSON.stringify(putResult));
+
+          // GET - 병합 결과 확인
+          const getAfterPut = await comUtil.sessionRequest(
+            "requestTest",
+            null,
+            "GET"
+          );
+          logPromise("4. GET (after PUT): " + JSON.stringify(getAfterPut));
+
+          // DELETE - 데이터 삭제
+          const deleteResult = await comUtil.sessionRequest(
+            "requestTest",
+            null,
+            "DELETE"
+          );
+          logPromise("5. DELETE: " + JSON.stringify(deleteResult));
+
+          // GET - 삭제 확인
+          const getAfterDelete = await comUtil.sessionRequest(
+            "requestTest",
+            null,
+            "GET"
+          );
+          logPromise(
+            "6. GET (after DELETE): " + JSON.stringify(getAfterDelete)
+          );
+
+          logPromise("=== sessionRequest 테스트 완료 ===");
+        } catch (error) {
+          logPromise("sessionRequest 테스트 에러: " + error.message);
+        }
+      }
+
+      // 통합 sessionCall 테스트
+      function testSessionCall() {
+        clearPromiseLog();
+        logPromise("=== sessionCall 통합 테스트 시작 ===");
+
+        const testData = { name: "sessionCall", method: "Promise체이닝" };
+
+        // Promise 체이닝 방식으로 테스트
+        comUtil
+          .sessionCall("callTest", testData, "POST")
+          .then((postResult) => {
+            logPromise("1. POST: " + JSON.stringify(postResult));
+            return comUtil.sessionCall("callTest", null, "GET");
+          })
+          .then((getResult) => {
+            logPromise("2. GET: " + JSON.stringify(getResult));
+            return comUtil.sessionCall("callTest", { chained: true }, "PUT");
+          })
+          .then((putResult) => {
+            logPromise("3. PUT: " + JSON.stringify(putResult));
+            return comUtil.sessionCall("callTest", null, "GET");
+          })
+          .then((getFinal) => {
+            logPromise("4. GET (final): " + JSON.stringify(getFinal));
+            return comUtil.sessionCall("callTest", null, "DELETE");
+          })
+          .then((deleteResult) => {
+            logPromise("5. DELETE: " + JSON.stringify(deleteResult));
+            logPromise("=== sessionCall 테스트 완료 ===");
+          })
+          .catch((error) => {
+            logPromise("sessionCall 테스트 에러: " + error);
+          });
       }
 
       // 페이지 로드 시 SessionStorage 내용 표시
