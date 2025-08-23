@@ -376,3 +376,23 @@ window.addEventListener("beforeunload", function () {
   DataShare.close();
 });
 ```
+
+## 🤝 기여하기
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+## 📄 라이선스
+
+이 프로젝트는 MIT 라이선스 하에 배포됩니다.
+
+## 🆘 지원
+
+문제가 발생하거나 질문이 있으시면 GitHub Issues를 통해 문의해 주세요.
+
+---
+
+**DataShare**를 사용해 주셔서 감사합니다! 🎉
