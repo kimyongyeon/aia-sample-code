@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+
+    <style>
+      .spinner {
+        border: 4px solid #f3f3f3; /* 회색 배경 */
+        border-top: 4px solid #4caf50; /* 초록색 라인 */
+        border-radius: 50%; /* 동그랗게 */
+        width: 24px;
+        height: 24px;
+        animation: spin 1s linear infinite; /* 무한 회전 */
+        display: inline-block;
+        vertical-align: middle;
+        margin-right: 8px;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+    </style>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  </head>
+  <body>
+    <div id="upload-status">
+      <div id="spinner" class="spinner"></div>
+      <span id="status-text">업로드 중...</span>
+    </div>
+
+    <script>
+      let lastProgressTime = Date.now();
+
+      // 새 FormData 객체 생성
+      let formData = new FormData();
+
+      // 일반 텍스트 필드 추가
+      formData.append("username", "kim");
+      formData.append("email", "test@example.com");
+
+      let xhr = $.ajax({
+        url: "https://www.naver.com/upload",
+        method: "POST",
+        data: formData,
+        processData: false,
+        contentType: false,
+        timeout: 0,
+        xhr: function () {
+          let xhr = $.ajaxSettings.xhr();
+          if (xhr.upload) {
+            xhr.upload.addEventListener(
+              "progress",
+              function (e) {
+                lastProgressTime = Date.now();
+                if (e.lengthComputable) {
+                  let percent = Math.round((e.loaded / e.total) * 100);
+                  updateProgress(percent);
+                }
+              },
+              false
+            );
+          }
+          return xhr;
+        },
+      });
+
+      function updateProgress(percent) {
+        if (percent >= 100) {
+          document.getElementById("spinner").style.display = "none";
+          document.getElementById("status-text").textContent = "업로드 완료!";
+        }
+      }
+
+      // watchdog timer (10초 동안 진척 없으면 멈춤 처리)
+      let watchdog = setInterval(function () {
+        if (Date.now() - lastProgressTime > 10000) {
+          xhr.abort();
+          stopSpinner();
+          alert("네트워크 문제로 업로드가 멈췄습니다.");
+          clearInterval(watchdog);
+        }
+      }, 2000);
+
+      function stopSpinner(message, success = true) {
+        let spinner = document.getElementById("spinner");
+        let statusText = document.getElementById("status-text");
+
+        // 스피너 숨기기
+        spinner.style.display = "none";
+
+        // 상태 메시지 변경
+        if (success) {
+          statusText.textContent = message || "업로드 완료!";
+          statusText.style.color = "green";
+        } else {
+          statusText.textContent = message || "업로드 실패!";
+          statusText.style.color = "red";
+        }
+      }
+    </script>
+  </body>
+</html>

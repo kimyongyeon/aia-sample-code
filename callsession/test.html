@@ -91,6 +91,10 @@
     <script>
       "use strict";
 
+      document.addEventListener("click", (e) => {
+        console.log(e.target);
+      });
+
       function log(elementId, message) {
         const element = document.getElementById(elementId);
         element.textContent +=

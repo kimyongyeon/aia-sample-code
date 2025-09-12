@@ -1,0 +1,1205 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>프로페셔널 슬롯머신 - 하우스 엣지 시뮬레이션</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+        color: white;
+        min-height: 100vh;
+        padding: 20px;
+      }
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        display: grid;
+        grid-template-columns: 1fr 350px;
+        gap: 20px;
+      }
+
+      .game-area {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 20px;
+        padding: 30px;
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+      }
+
+      .sidebar {
+        background: rgba(0, 0, 0, 0.3);
+        border-radius: 20px;
+        padding: 20px;
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .game-title {
+        text-align: center;
+        font-size: 2.5em;
+        font-weight: bold;
+        margin-bottom: 20px;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        background: linear-gradient(45deg, #ffd700, #ffed4e);
+        background-clip: text;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+
+      .credits-display {
+        text-align: center;
+        font-size: 1.8em;
+        margin-bottom: 20px;
+        padding: 15px;
+        background: rgba(0, 0, 0, 0.3);
+        border-radius: 10px;
+        border: 2px solid #ffd700;
+      }
+
+      .slot-machine {
+        background: linear-gradient(145deg, #2c2c2c, #1a1a1a);
+        border-radius: 15px;
+        padding: 30px;
+        margin: 20px 0;
+        border: 3px solid #ffd700;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      }
+
+      .reels-container {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+        margin-bottom: 30px;
+      }
+
+      .reel {
+        background: rgba(0, 0, 0, 0.8);
+        border-radius: 10px;
+        padding: 0;
+        border: 2px solid #444;
+        min-height: 200px;
+        position: relative;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+      }
+
+      .reel-strip {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .reel-strip.spinning {
+        animation: reelSpin 0.1s linear infinite;
+      }
+
+      @keyframes reelSpin {
+        0% {
+          transform: translateY(0);
+        }
+        100% {
+          transform: translateY(-66.67px); /* 한 심볼 높이만큼 이동 */
+        }
+      }
+
+      /* 릴 마스크 효과 */
+      .reel::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 30px;
+        background: linear-gradient(to bottom, rgba(0, 0, 0, 0.8), transparent);
+        z-index: 10;
+        pointer-events: none;
+      }
+
+      .reel::after {
+        content: "";
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 30px;
+        background: linear-gradient(to top, rgba(0, 0, 0, 0.8), transparent);
+        z-index: 10;
+        pointer-events: none;
+      }
+
+      .symbol {
+        font-size: 3.5em;
+        text-align: center;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+        height: 66.67px;
+        line-height: 66.67px;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .symbol.winning {
+        animation: glow 1s ease-in-out infinite alternate;
+        transform: scale(1.2);
+      }
+
+      @keyframes glow {
+        from {
+          text-shadow: 0 0 10px #ffd700, 0 0 20px #ffd700;
+        }
+        to {
+          text-shadow: 0 0 20px #ffd700, 0 0 30px #ffd700, 0 0 40px #ffd700;
+        }
+      }
+
+      .controls {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 20px;
+        flex-wrap: wrap;
+      }
+
+      .bet-controls {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        background: rgba(0, 0, 0, 0.3);
+        padding: 10px 15px;
+        border-radius: 25px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+      }
+
+      .bet-input {
+        width: 80px;
+        padding: 8px 12px;
+        font-size: 1.1em;
+        border: none;
+        border-radius: 5px;
+        text-align: center;
+        background: rgba(255, 255, 255, 0.9);
+        color: #333;
+      }
+
+      .btn {
+        padding: 12px 25px;
+        font-size: 1.1em;
+        font-weight: bold;
+        border: none;
+        border-radius: 25px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+      }
+
+      .btn-spin {
+        background: linear-gradient(45deg, #ff6b6b, #ff8e8e);
+        color: white;
+        font-size: 1.3em;
+        padding: 15px 40px;
+        box-shadow: 0 5px 15px rgba(255, 107, 107, 0.4);
+      }
+
+      .btn-spin:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(255, 107, 107, 0.6);
+      }
+
+      .btn-spin:disabled {
+        background: #666;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+        animation: spinButtonPulse 1s ease-in-out infinite alternate;
+      }
+
+      @keyframes spinButtonPulse {
+        from {
+          opacity: 0.6;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+
+      .btn-secondary {
+        background: linear-gradient(45deg, #4ecdc4, #44a08d);
+        color: white;
+      }
+
+      .btn-secondary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(78, 205, 196, 0.4);
+      }
+
+      .stats-section {
+        margin-bottom: 25px;
+      }
+
+      .stats-title {
+        font-size: 1.3em;
+        font-weight: bold;
+        margin-bottom: 15px;
+        color: #ffd700;
+        border-bottom: 2px solid #ffd700;
+        padding-bottom: 5px;
+      }
+
+      .stat-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 8px 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .stat-value {
+        font-weight: bold;
+        color: #4ecdc4;
+      }
+
+      .game-log {
+        max-height: 300px;
+        overflow-y: auto;
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 10px;
+        padding: 15px;
+      }
+
+      .log-entry {
+        padding: 8px;
+        margin-bottom: 5px;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 5px;
+        font-size: 0.9em;
+        border-left: 3px solid #4ecdc4;
+      }
+
+      .log-entry.win {
+        border-left-color: #ffd700;
+        background: rgba(255, 215, 0, 0.1);
+      }
+
+      .log-entry.big-win {
+        border-left-color: #ff6b6b;
+        background: rgba(255, 107, 107, 0.1);
+      }
+
+      .paytable {
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 10px;
+        padding: 15px;
+        margin-top: 20px;
+      }
+
+      .paytable-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 5px 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .symbol-small {
+        font-size: 1.5em;
+      }
+
+      .multiplier {
+        font-weight: bold;
+        color: #ffd700;
+      }
+
+      .result-display {
+        text-align: center;
+        margin: 20px 0;
+        padding: 15px;
+        border-radius: 10px;
+        font-size: 1.2em;
+        font-weight: bold;
+        min-height: 50px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .result-win {
+        background: linear-gradient(
+          45deg,
+          rgba(255, 215, 0, 0.3),
+          rgba(255, 255, 0, 0.2)
+        );
+        border: 2px solid #ffd700;
+        color: #ffd700;
+      }
+
+      .result-lose {
+        background: rgba(255, 255, 255, 0.1);
+        border: 2px solid rgba(255, 255, 255, 0.3);
+      }
+
+      .auto-play {
+        display: flex;
+        gap: 10px;
+        margin-top: 15px;
+        flex-wrap: wrap;
+      }
+
+      .auto-btn {
+        padding: 8px 15px;
+        font-size: 0.9em;
+        background: rgba(78, 205, 196, 0.2);
+        color: #4ecdc4;
+        border: 1px solid #4ecdc4;
+        border-radius: 15px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+
+      .auto-btn:hover {
+        background: #4ecdc4;
+        color: white;
+      }
+
+      .auto-btn.active {
+        background: #4ecdc4;
+        color: white;
+      }
+
+      .progress-bar {
+        width: 100%;
+        height: 6px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 3px;
+        overflow: hidden;
+        margin: 10px 0;
+      }
+
+      .progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #4ecdc4, #44a08d);
+        width: 0%;
+        transition: width 0.3s ease;
+      }
+
+      @media (max-width: 768px) {
+        .container {
+          grid-template-columns: 1fr;
+        }
+
+        .game-title {
+          font-size: 2em;
+        }
+
+        .symbol {
+          font-size: 2.5em;
+        }
+
+        .controls {
+          flex-direction: column;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <!-- 메인 게임 영역 -->
+      <div class="game-area">
+        <h1 class="game-title">🎰 프로페셔널 슬롯머신</h1>
+
+        <div class="credits-display">
+          💰 크레딧: <span id="credits">1000</span> 포인트
+        </div>
+
+        <div class="slot-machine">
+          <div class="reels-container" id="reels">
+            <div class="reel" id="reel1">
+              <div class="reel-strip" id="strip1">
+                <!-- 심볼들이 동적으로 추가됩니다 -->
+              </div>
+            </div>
+            <div class="reel" id="reel2">
+              <div class="reel-strip" id="strip2">
+                <!-- 심볼들이 동적으로 추가됩니다 -->
+              </div>
+            </div>
+            <div class="reel" id="reel3">
+              <div class="reel-strip" id="strip3">
+                <!-- 심볼들이 동적으로 추가됩니다 -->
+              </div>
+            </div>
+          </div>
+
+          <div class="result-display" id="result">
+            스핀 버튼을 눌러 게임을 시작하세요!
+          </div>
+
+          <div class="controls">
+            <div class="bet-controls">
+              <label>베팅:</label>
+              <button class="btn btn-secondary" onclick="adjustBet(-10)">
+                -10
+              </button>
+              <input
+                type="number"
+                id="betAmount"
+                class="bet-input"
+                value="10"
+                min="10"
+                max="100"
+                step="10"
+              />
+              <button class="btn btn-secondary" onclick="adjustBet(10)">
+                +10
+              </button>
+            </div>
+
+            <button class="btn btn-spin" id="spinBtn" onclick="spin()">
+              🎰 SPIN
+            </button>
+
+            <button class="btn btn-secondary" onclick="resetGame()">
+              🔄 리셋
+            </button>
+          </div>
+
+          <div class="auto-play">
+            <div class="auto-btn" onclick="autoPlay(10)">오토 10</div>
+            <div class="auto-btn" onclick="autoPlay(25)">오토 25</div>
+            <div class="auto-btn" onclick="autoPlay(50)">오토 50</div>
+            <div class="auto-btn" onclick="autoPlay(100)">오토 100</div>
+            <div class="auto-btn" onclick="stopAutoPlay()">중지</div>
+          </div>
+
+          <div class="progress-bar">
+            <div class="progress-fill" id="autoProgress"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 사이드바 -->
+      <div class="sidebar">
+        <!-- 실시간 통계 -->
+        <div class="stats-section">
+          <div class="stats-title">📊 실시간 통계</div>
+          <div class="stat-item">
+            <span>총 게임 수:</span>
+            <span class="stat-value" id="totalGames">0</span>
+          </div>
+          <div class="stat-item">
+            <span>총 베팅:</span>
+            <span class="stat-value" id="totalBets">0</span>
+          </div>
+          <div class="stat-item">
+            <span>총 당첨:</span>
+            <span class="stat-value" id="totalWins">0</span>
+          </div>
+          <div class="stat-item">
+            <span>현재 RTP:</span>
+            <span class="stat-value" id="currentRTP">0%</span>
+          </div>
+          <div class="stat-item">
+            <span>하우스 엣지:</span>
+            <span class="stat-value" id="houseEdge">0%</span>
+          </div>
+          <div class="stat-item">
+            <span>최고 당첨:</span>
+            <span class="stat-value" id="biggestWin">0</span>
+          </div>
+        </div>
+
+        <!-- 배당표 -->
+        <div class="stats-section">
+          <div class="stats-title">💰 배당표</div>
+          <div class="paytable">
+            <div class="paytable-row">
+              <span class="symbol-small">🍒🍒🍒</span>
+              <span class="multiplier">×2</span>
+            </div>
+            <div class="paytable-row">
+              <span class="symbol-small">🍋🍋🍋</span>
+              <span class="multiplier">×3</span>
+            </div>
+            <div class="paytable-row">
+              <span class="symbol-small">🍊🍊🍊</span>
+              <span class="multiplier">×4</span>
+            </div>
+            <div class="paytable-row">
+              <span class="symbol-small">🍇🍇🍇</span>
+              <span class="multiplier">×6</span>
+            </div>
+            <div class="paytable-row">
+              <span class="symbol-small">⭐⭐⭐</span>
+              <span class="multiplier">×10</span>
+            </div>
+            <div class="paytable-row">
+              <span class="symbol-small">💎💎💎</span>
+              <span class="multiplier">×25</span>
+            </div>
+            <div class="paytable-row">
+              <span class="symbol-small">7️⃣7️⃣7️⃣</span>
+              <span class="multiplier">×100</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 게임 로그 -->
+        <div class="stats-section">
+          <div class="stats-title">📝 게임 기록</div>
+          <div class="game-log" id="gameLog">
+            <div class="log-entry">게임을 시작하세요!</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      "use strict";
+
+      // 게임 상태
+      let gameState = {
+        credits: 1000,
+        totalGames: 0,
+        totalBets: 0,
+        totalWins: 0,
+        biggestWin: 0,
+        gameHistory: [],
+        isSpinning: false,
+        autoPlayCount: 0,
+        autoPlayActive: false,
+        autoPlayInterval: null,
+      };
+
+      // 심볼 설정 (하우스 엣지 85% RTP 설계)
+      const symbols = {
+        "🍒": { weight: 25, payout: 2 },
+        "🍋": { weight: 20, payout: 3 },
+        "🍊": { weight: 18, payout: 4 },
+        "🍇": { weight: 15, payout: 6 },
+        "⭐": { weight: 10, payout: 10 },
+        "💎": { weight: 8, payout: 25 },
+        "7️⃣": { weight: 4, payout: 100 },
+      };
+
+      // 가중치 기반 심볼 풀 생성
+      function createSymbolPool() {
+        const pool = [];
+        for (const [symbol, config] of Object.entries(symbols)) {
+          for (let i = 0; i < config.weight; i++) {
+            pool.push(symbol);
+          }
+        }
+        return pool;
+      }
+
+      const symbolPool = createSymbolPool();
+
+      // 로컬 스토리지에서 게임 상태 로드
+      function loadGameState() {
+        const saved = localStorage.getItem("slotGameState");
+        if (saved) {
+          try {
+            const loadedState = JSON.parse(saved);
+            gameState = { ...gameState, ...loadedState };
+            updateDisplay();
+          } catch (e) {
+            console.error("게임 상태 로드 실패:", e);
+          }
+        }
+      }
+
+      // 게임 상태 저장
+      function saveGameState() {
+        try {
+          const stateToSave = { ...gameState };
+          delete stateToSave.autoPlayInterval; // 인터벌은 저장하지 않음
+          localStorage.setItem("slotGameState", JSON.stringify(stateToSave));
+        } catch (e) {
+          console.error("게임 상태 저장 실패:", e);
+        }
+      }
+
+      // 랜덤 심볼 생성
+      function getRandomSymbol() {
+        return symbolPool[Math.floor(Math.random() * symbolPool.length)];
+      }
+
+      // 3x3 릴 생성
+      function generateReels() {
+        const reels = [];
+        for (let i = 0; i < 3; i++) {
+          const reel = [];
+          for (let j = 0; j < 3; j++) {
+            reel.push(getRandomSymbol());
+          }
+          reels.push(reel);
+        }
+        return reels;
+      }
+
+      // 당첨 라인 체크 (5개 라인)
+      function checkWinLines(reels) {
+        const lines = [
+          // 가로 라인
+          [
+            [0, 0],
+            [1, 0],
+            [2, 0],
+          ], // 상단
+          [
+            [0, 1],
+            [1, 1],
+            [2, 1],
+          ], // 중단
+          [
+            [0, 2],
+            [1, 2],
+            [2, 2],
+          ], // 하단
+          // 대각선
+          [
+            [0, 0],
+            [1, 1],
+            [2, 2],
+          ], // 좌상-우하
+          [
+            [0, 2],
+            [1, 1],
+            [2, 0],
+          ], // 좌하-우상
+        ];
+
+        const wins = [];
+
+        lines.forEach((line, lineIndex) => {
+          const [pos1, pos2, pos3] = line;
+          const symbol1 = reels[pos1[0]][pos1[1]];
+          const symbol2 = reels[pos2[0]][pos2[1]];
+          const symbol3 = reels[pos3[0]][pos3[1]];
+
+          if (symbol1 === symbol2 && symbol2 === symbol3) {
+            wins.push({
+              lineIndex,
+              symbol: symbol1,
+              positions: line,
+              payout: symbols[symbol1].payout,
+            });
+          }
+        });
+
+        return wins;
+      }
+
+      // 베팅 금액 조정
+      function adjustBet(amount) {
+        const betInput = document.getElementById("betAmount");
+        let newBet = parseInt(betInput.value) + amount;
+        newBet = Math.max(
+          10,
+          Math.min(100, Math.min(newBet, gameState.credits))
+        );
+        betInput.value = newBet;
+      }
+
+      // 릴 스트립 초기화
+      function initializeReelStrips() {
+        for (let i = 1; i <= 3; i++) {
+          const strip = document.getElementById(`strip${i}`);
+          strip.innerHTML = "";
+
+          // 15개의 랜덤 심볼로 스트립 생성 (무한 스크롤을 위해)
+          for (let j = 0; j < 15; j++) {
+            const symbol = document.createElement("div");
+            symbol.className = "symbol";
+            symbol.textContent = getRandomSymbol();
+            strip.appendChild(symbol);
+          }
+        }
+      }
+
+      // 릴 표시 업데이트 (최종 결과만)
+      function updateReelDisplay(reels) {
+        for (let i = 0; i < 3; i++) {
+          const strip = document.getElementById(`strip${i + 1}`);
+          const symbols = strip.querySelectorAll(".symbol");
+
+          // 가운데 3개 심볼을 최종 결과로 설정 (인덱스 6, 7, 8)
+          for (let j = 0; j < 3; j++) {
+            if (symbols[6 + j]) {
+              symbols[6 + j].textContent = reels[i][j];
+              symbols[6 + j].classList.remove("winning");
+            }
+          }
+        }
+      }
+
+      // 무한 스크롤 스핀 애니메이션
+      function spinReel(stripId, duration, finalSymbols) {
+        return new Promise((resolve) => {
+          const strip = document.getElementById(stripId);
+          const symbols = strip.querySelectorAll(".symbol");
+
+          // 스핀 시작
+          strip.classList.add("spinning");
+
+          let spinCount = 0;
+          const maxSpins = Math.floor(duration / 100); // 100ms마다 심볼 변경
+
+          const spinInterval = setInterval(() => {
+            // 모든 심볼을 한 칸씩 위로 이동시키고 맨 아래에 새 심볼 추가
+            const firstSymbol = symbols[0];
+            firstSymbol.remove();
+
+            const newSymbol = document.createElement("div");
+            newSymbol.className = "symbol";
+            newSymbol.textContent = getRandomSymbol();
+            strip.appendChild(newSymbol);
+
+            spinCount++;
+
+            if (spinCount >= maxSpins) {
+              clearInterval(spinInterval);
+
+              // 최종 심볼 설정
+              const currentSymbols = strip.querySelectorAll(".symbol");
+              for (let i = 0; i < 3; i++) {
+                if (currentSymbols[6 + i]) {
+                  currentSymbols[6 + i].textContent = finalSymbols[i];
+                }
+              }
+
+              // 스핀 애니메이션 중지
+              setTimeout(() => {
+                strip.classList.remove("spinning");
+                resolve();
+              }, 300);
+            }
+          }, 100);
+        });
+      }
+
+      // 현재 보이는 심볼 가져오기 (당첨 체크용)
+      function getCurrentVisibleSymbols() {
+        const result = [];
+        for (let i = 1; i <= 3; i++) {
+          const strip = document.getElementById(`strip${i}`);
+          const symbols = strip.querySelectorAll(".symbol");
+          const reelSymbols = [];
+
+          // 가운데 3개 심볼 (인덱스 6, 7, 8)
+          for (let j = 6; j < 9; j++) {
+            if (symbols[j]) {
+              reelSymbols.push(symbols[j].textContent);
+            }
+          }
+          result.push(reelSymbols);
+        }
+        return result;
+      }
+
+      // 스핀 사운드 효과 (Web Audio API 사용)
+      function playSpinSound() {
+        try {
+          const audioContext = new (window.AudioContext ||
+            window.webkitAudioContext)();
+          const oscillator = audioContext.createOscillator();
+          const gainNode = audioContext.createGain();
+
+          oscillator.connect(gainNode);
+          gainNode.connect(audioContext.destination);
+
+          oscillator.frequency.setValueAtTime(200, audioContext.currentTime);
+          oscillator.frequency.exponentialRampToValueAtTime(
+            100,
+            audioContext.currentTime + 0.1
+          );
+
+          gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+          gainNode.gain.exponentialRampToValueAtTime(
+            0.01,
+            audioContext.currentTime + 0.1
+          );
+
+          oscillator.start(audioContext.currentTime);
+          oscillator.stop(audioContext.currentTime + 0.1);
+        } catch (e) {
+          // 사운드 지원하지 않는 브라우저에서는 무시
+          console.log("Audio not supported");
+        }
+      }
+
+      // 당첨 사운드 효과
+      function playWinSound() {
+        try {
+          const audioContext = new (window.AudioContext ||
+            window.webkitAudioContext)();
+          const oscillator = audioContext.createOscillator();
+          const gainNode = audioContext.createGain();
+
+          oscillator.connect(gainNode);
+          gainNode.connect(audioContext.destination);
+
+          oscillator.frequency.setValueAtTime(440, audioContext.currentTime);
+          oscillator.frequency.setValueAtTime(
+            554,
+            audioContext.currentTime + 0.1
+          );
+          oscillator.frequency.setValueAtTime(
+            659,
+            audioContext.currentTime + 0.2
+          );
+
+          gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
+          gainNode.gain.exponentialRampToValueAtTime(
+            0.01,
+            audioContext.currentTime + 0.3
+          );
+
+          oscillator.start(audioContext.currentTime);
+          oscillator.stop(audioContext.currentTime + 0.3);
+        } catch (e) {
+          console.log("Audio not supported");
+        }
+      }
+
+      // 당첨 라인 하이라이트
+      function highlightWinningLines(wins) {
+        wins.forEach((win) => {
+          win.positions.forEach((pos) => {
+            const strip = document.getElementById(`strip${pos[0] + 1}`);
+            const symbols = strip.querySelectorAll(".symbol");
+            // 가운데 3개 심볼 중에서 해당 위치 (인덱스 6, 7, 8)
+            if (symbols[6 + pos[1]]) {
+              symbols[6 + pos[1]].classList.add("winning");
+            }
+          });
+        });
+      }
+
+      // 통계 업데이트
+      function updateStats() {
+        document.getElementById("totalGames").textContent =
+          gameState.totalGames.toLocaleString();
+        document.getElementById("totalBets").textContent =
+          gameState.totalBets.toLocaleString();
+        document.getElementById("totalWins").textContent =
+          gameState.totalWins.toLocaleString();
+        document.getElementById("biggestWin").textContent =
+          gameState.biggestWin.toLocaleString();
+
+        const rtp =
+          gameState.totalBets > 0
+            ? (gameState.totalWins / gameState.totalBets) * 100
+            : 0;
+        const houseEdge = 100 - rtp;
+
+        document.getElementById("currentRTP").textContent =
+          rtp.toFixed(2) + "%";
+        document.getElementById("houseEdge").textContent =
+          houseEdge.toFixed(2) + "%";
+      }
+
+      // 화면 업데이트
+      function updateDisplay() {
+        document.getElementById("credits").textContent =
+          gameState.credits.toLocaleString();
+        updateStats();
+      }
+
+      // 게임 로그 추가
+      function addGameLog(game) {
+        const log = document.getElementById("gameLog");
+        const entry = document.createElement("div");
+
+        let entryClass = "log-entry";
+        let resultText = "";
+
+        if (game.totalWin > 0) {
+          if (game.totalWin >= game.bet * 10) {
+            entryClass += " big-win";
+            resultText = `🎉 대박! ${game.totalWin}포인트 당첨!`;
+          } else {
+            entryClass += " win";
+            resultText = `✨ ${game.totalWin}포인트 당첨!`;
+          }
+        } else {
+          resultText = `💸 ${game.bet}포인트 베팅`;
+        }
+
+        entry.className = entryClass;
+        entry.innerHTML = `
+                <div>${resultText}</div>
+                <small style="opacity: 0.7;">${new Date().toLocaleTimeString()}</small>
+            `;
+
+        log.insertBefore(entry, log.firstChild);
+
+        // 로그 개수 제한 (최대 50개)
+        while (log.children.length > 50) {
+          log.removeChild(log.lastChild);
+        }
+      }
+
+      // 메인 스핀 함수
+      async function spin() {
+        const betAmount = parseInt(document.getElementById("betAmount").value);
+
+        if (gameState.isSpinning) return Promise.resolve();
+        if (gameState.credits < betAmount) {
+          showResult("크레딧이 부족합니다!", false);
+          return Promise.resolve();
+        }
+
+        gameState.isSpinning = true;
+        document.getElementById("spinBtn").disabled = true;
+
+        // 스핀 사운드 재생
+        playSpinSound();
+
+        // 크레딧 차감
+        gameState.credits -= betAmount;
+        gameState.totalBets += betAmount;
+        gameState.totalGames++;
+
+        // 즉시 화면 업데이트 (크레딧 차감 반영)
+        updateDisplay();
+
+        // 결과 생성
+        const newReels = generateReels();
+
+        // 각 릴 스피닝 애니메이션 시작 (다른 시간에 멈춤)
+        const spinPromises = [];
+
+        for (let i = 0; i < 3; i++) {
+          // 각 릴마다 다른 지속 시간 (1릴: 1.5초, 2릴: 2초, 3릴: 2.5초)
+          const duration = 1500 + i * 500;
+          const stripId = `strip${i + 1}`;
+
+          const spinPromise = spinReel(stripId, duration, newReels[i]);
+          spinPromises.push(spinPromise);
+        }
+
+        // 모든 릴이 멈출 때까지 대기
+        await Promise.all(spinPromises);
+
+        // 당첨 체크
+        const wins = checkWinLines(newReels);
+        let totalWin = 0;
+
+        if (wins.length > 0) {
+          wins.forEach((win) => {
+            totalWin += betAmount * win.payout;
+          });
+
+          gameState.credits += totalWin;
+          gameState.totalWins += totalWin;
+
+          if (totalWin > gameState.biggestWin) {
+            gameState.biggestWin = totalWin;
+          }
+
+          highlightWinningLines(wins);
+          playWinSound(); // 당첨 사운드 재생
+          showResult(`🎉 ${totalWin}포인트 당첨! (${wins.length}라인)`, true);
+        } else {
+          showResult("다음 기회에!", false);
+        }
+
+        // 게임 기록
+        const gameRecord = {
+          bet: betAmount,
+          reels: newReels,
+          wins: wins,
+          totalWin: totalWin,
+          timestamp: new Date(),
+        };
+
+        gameState.gameHistory.push(gameRecord);
+        addGameLog(gameRecord);
+
+        // 화면 업데이트
+        updateDisplay();
+        saveGameState();
+
+        gameState.isSpinning = false;
+        document.getElementById("spinBtn").disabled = false;
+
+        return Promise.resolve();
+      }
+
+      // 결과 표시
+      function showResult(message, isWin) {
+        const resultDiv = document.getElementById("result");
+        resultDiv.textContent = message;
+        resultDiv.className = `result-display ${
+          isWin ? "result-win" : "result-lose"
+        }`;
+      }
+
+      // 게임 리셋
+      function resetGame() {
+        if (confirm("게임을 초기화하시겠습니까? 모든 기록이 삭제됩니다.")) {
+          gameState = {
+            credits: 1000,
+            totalGames: 0,
+            totalBets: 0,
+            totalWins: 0,
+            biggestWin: 0,
+            gameHistory: [],
+            isSpinning: false,
+            autoPlayCount: 0,
+            autoPlayActive: false,
+            autoPlayInterval: null,
+          };
+
+          stopAutoPlay();
+          localStorage.removeItem("slotGameState");
+
+          // 화면 초기화
+          updateDisplay();
+          document.getElementById("gameLog").innerHTML =
+            '<div class="log-entry">게임을 시작하세요!</div>';
+          showResult("스핀 버튼을 눌러 게임을 시작하세요!", false);
+
+          // 당첨 효과 제거
+          document.querySelectorAll(".symbol").forEach((symbol) => {
+            symbol.classList.remove("winning");
+          });
+
+          // 릴 스트립 재초기화
+          initializeReelStrips();
+        }
+      }
+
+      // 오토플레이 시작
+      function autoPlay(count) {
+        if (gameState.isSpinning || gameState.autoPlayActive) return;
+
+        gameState.autoPlayCount = count;
+        gameState.autoPlayActive = true;
+
+        // 오토플레이 버튼 스타일 업데이트
+        document.querySelectorAll(".auto-btn").forEach((btn) => {
+          btn.classList.remove("active");
+        });
+        event.target.classList.add("active");
+
+        // 프로그레스 바 초기화
+        updateAutoProgress(0);
+
+        // 오토플레이 실행 (재귀적으로 실행하여 스핀 완료 후 다음 스핀)
+        const runAutoPlay = () => {
+          if (!gameState.autoPlayActive || gameState.autoPlayCount <= 0) {
+            stopAutoPlay();
+            return;
+          }
+
+          if (gameState.isSpinning) {
+            // 스핀 중이면 500ms 후 다시 체크
+            setTimeout(runAutoPlay, 500);
+            return;
+          }
+
+          const betAmount = parseInt(
+            document.getElementById("betAmount").value
+          );
+
+          if (gameState.credits < betAmount) {
+            stopAutoPlay();
+            showResult("크레딧이 부족하여 오토플레이가 중지되었습니다!", false);
+            return;
+          }
+
+          // 스핀 실행 후 완료되면 다음 스핀 예약
+          spin()
+            .then(() => {
+              gameState.autoPlayCount--;
+              const progress =
+                ((count - gameState.autoPlayCount) / count) * 100;
+              updateAutoProgress(progress);
+
+              // 1초 후 다음 스핀 (스핀 간 간격)
+              setTimeout(runAutoPlay, 1000);
+            })
+            .catch((error) => {
+              console.error("Auto spin error:", error);
+              stopAutoPlay();
+            });
+        };
+
+        // 즉시 첫 스핀 시작
+        runAutoPlay();
+      }
+
+      // 오토플레이 중지
+      function stopAutoPlay() {
+        gameState.autoPlayActive = false;
+        gameState.autoPlayCount = 0;
+
+        if (gameState.autoPlayInterval) {
+          clearInterval(gameState.autoPlayInterval);
+          gameState.autoPlayInterval = null;
+        }
+
+        // 버튼 스타일 초기화
+        document.querySelectorAll(".auto-btn").forEach((btn) => {
+          btn.classList.remove("active");
+        });
+
+        // 프로그레스 바 초기화
+        updateAutoProgress(0);
+      }
+
+      // 오토플레이 프로그레스 업데이트
+      function updateAutoProgress(percentage) {
+        document.getElementById("autoProgress").style.width = percentage + "%";
+      }
+
+      // 페이지 로드 시 초기화
+      document.addEventListener("DOMContentLoaded", function () {
+        initializeReelStrips();
+        loadGameState();
+        updateDisplay();
+
+        // 베팅 입력 필드 이벤트
+        document
+          .getElementById("betAmount")
+          .addEventListener("input", function () {
+            let value = parseInt(this.value);
+            if (isNaN(value) || value < 10) value = 10;
+            if (value > 100) value = 100;
+            if (value > gameState.credits) value = gameState.credits;
+            this.value = value;
+          });
+
+        // 키보드 이벤트
+        document.addEventListener("keydown", function (e) {
+          if (e.code === "Space" && !gameState.isSpinning) {
+            e.preventDefault();
+            spin();
+          }
+        });
+      });
+
+      // 페이지 언로드 시 상태 저장
+      window.addEventListener("beforeunload", function () {
+        saveGameState();
+      });
+    </script>
+  </body>
+</html>
