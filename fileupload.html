@@ -30,63 +30,265 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   </head>
   <body>
+    <h2>파일 업로드 테스트</h2>
+
     <div id="upload-status">
       <div id="spinner" class="spinner"></div>
       <span id="status-text">업로드 중...</span>
     </div>
 
+    <div id="file-buttons" style="margin-top: 20px; display: none">
+      <h3>다른 파일 테스트:</h3>
+      <button onclick="uploadFile(testFiles[0])">
+        텍스트 파일 (sample.txt)
+      </button>
+      <button onclick="uploadFile(testFiles[1])">JSON 파일 (data.json)</button>
+      <button onclick="uploadFile(testFiles[2])">CSV 파일 (users.csv)</button>
+      <button onclick="uploadFile(testFiles[3])">
+        이미지 파일 (test-image.png)
+      </button>
+    </div>
+
     <script>
       let lastProgressTime = Date.now();
 
-      // 새 FormData 객체 생성
-      let formData = new FormData();
+      // 서버가 하나의 파일만 받으므로 테스트할 파일 선택
+      const testFiles = [];
 
-      // 일반 텍스트 필드 추가
-      formData.append("username", "kim");
-      formData.append("email", "test@example.com");
-
-      let xhr = $.ajax({
-        url: "https://www.naver.com/upload",
-        method: "POST",
-        data: formData,
-        processData: false,
-        contentType: false,
-        timeout: 0,
-        xhr: function () {
-          let xhr = $.ajaxSettings.xhr();
-          if (xhr.upload) {
-            xhr.upload.addEventListener(
-              "progress",
-              function (e) {
-                lastProgressTime = Date.now();
-                if (e.lengthComputable) {
-                  let percent = Math.round((e.loaded / e.total) * 100);
-                  updateProgress(percent);
-                }
-              },
-              false
-            );
-          }
-          return xhr;
-        },
+      // 1. 텍스트 파일 더미 데이터
+      const textContent =
+        "이것은 테스트용 더미 텍스트 파일입니다.\n" +
+        "파일 업로드 테스트를 위한 샘플 데이터입니다.\n" +
+        "한글과 영어가 포함된 텍스트입니다.\n" +
+        "This is a sample text file for upload testing.";
+      const textBlob = new Blob([textContent], { type: "text/plain" });
+      testFiles.push({
+        blob: textBlob,
+        name: "sample.txt",
+        type: "텍스트 파일",
       });
 
-      function updateProgress(percent) {
-        if (percent >= 100) {
-          document.getElementById("spinner").style.display = "none";
-          document.getElementById("status-text").textContent = "업로드 완료!";
-        }
+      // 2. PDF 파일 더미 데이터 (간단한 PDF 구조)
+      const pdfContent = `%PDF-1.4
+1 0 obj
+<<
+/Type /Catalog
+/Pages 2 0 R
+>>
+endobj
+2 0 obj
+<<
+/Type /Pages
+/Kids [3 0 R]
+/Count 1
+>>
+endobj
+3 0 obj
+<<
+/Type /Page
+/Parent 2 0 R
+/MediaBox [0 0 612 792]
+/Contents 4 0 R
+>>
+endobj
+4 0 obj
+<<
+/Length 44
+>>
+stream
+BT
+/F1 12 Tf
+100 700 Td
+(Hello PDF Test!) Tj
+ET
+endstream
+endobj
+xref
+0 5
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000206 00000 n 
+trailer
+<<
+/Size 5
+/Root 1 0 R
+>>
+startxref
+299
+%%EOF`;
+      const pdfBlob = new Blob([pdfContent], { type: "application/pdf" });
+      testFiles.push({
+        blob: pdfBlob,
+        name: "test-document.pdf",
+        type: "PDF 파일",
+      });
+
+      // 3. Excel 파일 더미 데이터 (CSV를 Excel로 변경)
+      const csvContent =
+        "이름,나이,이메일\n" +
+        "김철수,25,kim@example.com\n" +
+        "이영희,30,lee@example.com\n" +
+        "박민수,28,park@example.com";
+      const xlsBlob = new Blob([csvContent], {
+        type: "application/vnd.ms-excel",
+      });
+      testFiles.push({ blob: xlsBlob, name: "users.xls", type: "Excel 파일" });
+
+      // 4. 이미지 파일 더미 데이터 (100x100 픽셀 PNG)
+      const canvas = document.createElement("canvas");
+      canvas.width = 100;
+      canvas.height = 100;
+      const ctx = canvas.getContext("2d");
+
+      // 그라데이션 배경 생성
+      const gradient = ctx.createLinearGradient(0, 0, 100, 100);
+      gradient.addColorStop(0, "#ff6b6b");
+      gradient.addColorStop(1, "#4ecdc4");
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, 100, 100);
+
+      // 텍스트 추가
+      ctx.fillStyle = "white";
+      ctx.font = "14px Arial";
+      ctx.textAlign = "center";
+      ctx.fillText("TEST", 50, 55);
+
+      canvas.toBlob(function (blob) {
+        testFiles.push({
+          blob: blob,
+          name: "test-image.png",
+          type: "이미지 파일",
+        });
+
+        console.log("생성된 더미 파일들 (서버 허용 확장자):");
+        testFiles.forEach((file, index) => {
+          const fileSize = (file.blob.size / 1024).toFixed(2);
+          console.log(
+            `${index + 1}. ${file.name} (${file.type}) - ${fileSize}KB`
+          );
+        });
+
+        // 첫 번째 파일(텍스트 파일)을 자동 업로드
+        uploadFile(testFiles[0]);
+
+        // 버튼들 표시 (약간의 지연 후)
+        setTimeout(() => {
+          document.getElementById("file-buttons").style.display = "block";
+        }, 2000);
+      }, "image/png");
+
+      function uploadFile(fileInfo) {
+        // 스피너 다시 표시
+        document.getElementById("spinner").style.display = "inline-block";
+        document.getElementById("status-text").textContent =
+          "업로드 준비 중...";
+        document.getElementById("status-text").style.color = "black";
+
+        // 새 FormData 객체 생성
+        let formData = new FormData();
+
+        // 서버에서 요구하는 "file" 파라미터로 파일 추가
+        formData.append("file", fileInfo.blob, fileInfo.name);
+
+        console.log(`업로드 시작: ${fileInfo.name} (${fileInfo.type})`);
+
+        // AJAX 요청 실행
+        startUpload(formData, fileInfo);
       }
 
-      // watchdog timer (10초 동안 진척 없으면 멈춤 처리)
-      let watchdog = setInterval(function () {
-        if (Date.now() - lastProgressTime > 10000) {
-          xhr.abort();
-          stopSpinner();
-          alert("네트워크 문제로 업로드가 멈췄습니다.");
+      function startUpload(formData, fileInfo) {
+        let xhr = $.ajax({
+          url: "http://localhost:8080/upload",
+          method: "POST",
+          data: formData,
+          processData: false,
+          contentType: false,
+          timeout: 30000, // 30초 타임아웃
+          xhr: function () {
+            let xhr = $.ajaxSettings.xhr();
+            if (xhr.upload) {
+              xhr.upload.addEventListener(
+                "progress",
+                function (e) {
+                  lastProgressTime = Date.now();
+                  if (e.lengthComputable) {
+                    let percent = Math.round((e.loaded / e.total) * 100);
+                    updateProgress(percent, fileInfo.name);
+                  }
+                },
+                false
+              );
+            }
+            return xhr;
+          },
+          success: function (response) {
+            console.log("업로드 성공:", response);
+            stopSpinner(`${fileInfo.name} 업로드 완료!`, true);
+
+            // 응답 데이터 표시
+            if (response.success && response.data) {
+              console.log("서버 응답 데이터:", response.data);
+              setTimeout(() => {
+                alert(
+                  `업로드 성공!\n파일: ${fileInfo.name}\n메시지: ${response.message}`
+                );
+              }, 1000);
+            }
+          },
+          error: function (xhr, status, error) {
+            console.error("업로드 실패:", {
+              status: xhr.status,
+              statusText: xhr.statusText,
+              responseText: xhr.responseText,
+              error: error,
+            });
+
+            let errorMessage = "업로드 실패";
+            if (xhr.responseJSON && xhr.responseJSON.message) {
+              errorMessage = xhr.responseJSON.message;
+            } else if (xhr.status === 0) {
+              errorMessage =
+                "서버에 연결할 수 없습니다. 서버가 실행 중인지 확인해주세요.";
+            } else if (xhr.status === 404) {
+              errorMessage = "업로드 엔드포인트를 찾을 수 없습니다.";
+            } else if (xhr.status >= 500) {
+              errorMessage = "서버 내부 오류가 발생했습니다.";
+            }
+
+            stopSpinner(`${fileInfo.name} ${errorMessage}`, false);
+            alert(
+              `업로드 실패!\n파일: ${fileInfo.name}\n오류: ${errorMessage}`
+            );
+          },
+        });
+
+        // watchdog timer (10초 동안 진척 없으면 멈춤 처리)
+        let watchdog = setInterval(function () {
+          if (Date.now() - lastProgressTime > 10000) {
+            xhr.abort();
+            stopSpinner(`${fileInfo.name} 업로드 타임아웃`, false);
+            alert("네트워크 문제로 업로드가 멈췄습니다.");
+            clearInterval(watchdog);
+          }
+        }, 2000);
+
+        // AJAX 완료 시 watchdog 정리
+        xhr.always(function () {
           clearInterval(watchdog);
+        });
+      }
+
+      function updateProgress(percent, fileName) {
+        const statusText = document.getElementById("status-text");
+
+        if (percent >= 100) {
+          statusText.textContent = `${fileName} 업로드 완료 중...`;
+        } else {
+          statusText.textContent = `${fileName} 업로드 중... ${percent}%`;
         }
-      }, 2000);
+      }
 
       function stopSpinner(message, success = true) {
         let spinner = document.getElementById("spinner");
