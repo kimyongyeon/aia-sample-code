@@ -32,6 +32,8 @@
   <body>
     <h2>파일 업로드 테스트</h2>
 
+    <input type="file" id="fileInput" accept="image/*,application/pdf" />
+
     <div id="upload-status">
       <div id="spinner" class="spinner"></div>
       <span id="status-text">업로드 중...</span>
@@ -305,6 +307,85 @@ startxref
           statusText.textContent = message || "업로드 실패!";
           statusText.style.color = "red";
         }
+      }
+
+      async function convertFileToBase64(file, options = {}) {
+        const { includeDataUrl = false, maxSize = 10 * 1024 * 1024 } = options;
+
+        // 파일 크기 검증
+        if (file.size > maxSize) {
+          throw new Error(
+            `파일 크기가 ${maxSize / 1024 / 1024}MB를 초과합니다`
+          );
+        }
+
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+
+          reader.onload = () => {
+            const result = reader.result;
+
+            if (includeDataUrl) {
+              resolve(result); // data:image/jpeg;base64,... 전체 반환
+            } else {
+              resolve(result.split(",")[1]); // base64 문자열만 반환
+            }
+          };
+
+          reader.onerror = () => reject(new Error("파일 변환 중 오류 발생"));
+          reader.onabort = () =>
+            reject(new Error("파일 변환이 중단되었습니다"));
+
+          reader.readAsDataURL(file);
+        });
+      }
+
+      document
+        .getElementById("fileInput")
+        .addEventListener("change", async (event) => {
+          const file = event.target.files[0];
+
+          if (!file) return;
+
+          try {
+            // 순수 base64 문자열
+            const base64String = await convertFileToBase64(file);
+            console.log("Base64:", base64String);
+
+            // Data URL 포함된 형태
+            const dataUrl = await convertFileToBase64(file, {
+              includeDataUrl: true,
+            });
+            console.log("Data URL:", dataUrl);
+
+            // 서버 전송 예제
+            await uploadToServer(base64String, file.type, file.name);
+          } catch (error) {
+            console.error("변환 실패:", error.message);
+          }
+        });
+
+      async function uploadToServer(base64Data, mimeType, fileName) {
+        const payload = {
+          file: base64Data,
+          type: mimeType,
+          name: fileName,
+          size: base64Data.length,
+        };
+
+        const response = await fetch("/api/upload", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        });
+
+        if (!response.ok) {
+          throw new Error("서버 업로드 실패");
+        }
+
+        return response.json();
       }
     </script>
   </body>
