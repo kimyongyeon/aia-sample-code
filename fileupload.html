@@ -26,6 +26,57 @@
           transform: rotate(360deg);
         }
       }
+
+      /* 이미지 미리보기 스타일 */
+      .preview-container {
+        margin-top: 20px;
+        padding: 20px;
+        border: 2px dashed #ddd;
+        border-radius: 8px;
+        background-color: #f9f9f9;
+        text-align: center;
+        display: none;
+      }
+
+      .preview-container.has-image {
+        display: block;
+        border-color: #4caf50;
+        background-color: #f0fff0;
+      }
+
+      .preview-image {
+        max-width: 300px;
+        max-height: 300px;
+        border: 2px solid #ddd;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        margin: 10px 0;
+      }
+
+      .preview-info {
+        margin-top: 10px;
+        font-size: 14px;
+        color: #666;
+      }
+
+      .preview-info strong {
+        color: #333;
+      }
+
+      .remove-preview {
+        margin-top: 10px;
+        padding: 8px 16px;
+        background-color: #ff4444;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+      }
+
+      .remove-preview:hover {
+        background-color: #cc3333;
+      }
     </style>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   </head>
@@ -37,6 +88,24 @@
     <div id="upload-status">
       <div id="spinner" class="spinner"></div>
       <span id="status-text">업로드 중...</span>
+    </div>
+
+    <!-- 이미지 미리보기 컨테이너 -->
+    <div id="preview-container" class="preview-container">
+      <h4>이미지 미리보기</h4>
+      <img id="preview-image" class="preview-image" alt="미리보기" />
+      <div id="preview-info" class="preview-info">
+        <div><strong>파일명:</strong> <span id="file-name"></span></div>
+        <div><strong>파일 크기:</strong> <span id="file-size"></span></div>
+        <div><strong>파일 타입:</strong> <span id="file-type"></span></div>
+      </div>
+      <button
+        id="remove-preview"
+        class="remove-preview"
+        onclick="clearPreview()"
+      >
+        미리보기 제거
+      </button>
     </div>
 
     <div id="file-buttons" style="margin-top: 20px; display: none">
@@ -187,6 +256,17 @@ startxref
         document.getElementById("status-text").textContent =
           "업로드 준비 중...";
         document.getElementById("status-text").style.color = "black";
+
+        // 이미지 파일인 경우 미리보기 표시
+        if (fileInfo.blob.type.startsWith("image/")) {
+          const file = new File([fileInfo.blob], fileInfo.name, {
+            type: fileInfo.blob.type,
+          });
+          showImagePreview(file);
+        } else {
+          // 이미지가 아닌 경우 미리보기 제거
+          clearPreview();
+        }
 
         // 새 FormData 객체 생성
         let formData = new FormData();
@@ -340,12 +420,95 @@ startxref
         });
       }
 
+      // 이미지 미리보기 함수 (URL.createObjectURL 사용)
+      // 장점:
+      // - 메모리 효율적 (base64 변환 불필요)
+      // - 빠른 처리 속도 (즉시 가상 URL 생성)
+      // - 큰 파일도 부담 없음
+      // 주의사항:
+      // - 반드시 URL.revokeObjectURL()로 메모리 해제 필요
+      function showImagePreview(file) {
+        const $previewContainer = $("#preview-container");
+        const $previewImage = $("#preview-image");
+        const $fileName = $("#file-name");
+        const $fileSize = $("#file-size");
+        const $fileType = $("#file-type");
+
+        // 기존 Object URL이 있다면 해제 (메모리 누수 방지)
+        const currentSrc = $previewImage.attr("src");
+        if (currentSrc && currentSrc.startsWith("blob:")) {
+          URL.revokeObjectURL(currentSrc);
+        }
+
+        // Object URL 생성 (가상 이미지 주소)
+        const objectURL = URL.createObjectURL(file);
+
+        // 이미지 미리보기 설정
+        $previewImage.attr("src", objectURL);
+        $fileName.text(file.name);
+        $fileSize.text(formatFileSize(file.size));
+        $fileType.text(file.type);
+
+        // 미리보기 컨테이너 표시
+        $previewContainer.addClass("has-image");
+
+        console.log("이미지 미리보기 표시됨 (Object URL):", file.name);
+        console.log("생성된 Object URL:", objectURL);
+      }
+
+      // 파일 크기 포맷팅 함수
+      function formatFileSize(bytes) {
+        if (bytes === 0) return "0 Bytes";
+
+        const k = 1024;
+        const sizes = ["Bytes", "KB", "MB", "GB"];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+      }
+
+      // 이미지 파일인지 확인하는 함수
+      function isImageFile(file) {
+        return file.type.startsWith("image/");
+      }
+
+      // 미리보기 제거 함수
+      function clearPreview() {
+        const $previewContainer = $("#preview-container");
+        const $previewImage = $("#preview-image");
+        const $fileInput = $("#fileInput");
+
+        // 기존 Object URL 해제 (메모리 누수 방지)
+        const currentSrc = $previewImage.attr("src");
+        if (currentSrc && currentSrc.startsWith("blob:")) {
+          URL.revokeObjectURL(currentSrc);
+          console.log("Object URL 해제됨:", currentSrc);
+        }
+
+        // 미리보기 숨기기
+        $previewContainer.removeClass("has-image");
+        $previewImage.attr("src", "");
+
+        // 파일 입력 초기화
+        $fileInput.val("");
+
+        console.log("이미지 미리보기 제거됨");
+      }
+
       document
         .getElementById("fileInput")
         .addEventListener("change", async (event) => {
           const file = event.target.files[0];
 
           if (!file) return;
+
+          // 이미지 파일인 경우 미리보기 표시
+          if (isImageFile(file)) {
+            showImagePreview(file);
+          } else {
+            // 이미지가 아닌 경우 미리보기 제거
+            clearPreview();
+          }
 
           try {
             // 순수 base64 문자열
@@ -387,6 +550,16 @@ startxref
 
         return response.json();
       }
+
+      // 페이지 언로드 시 Object URL 정리 (메모리 누수 방지)
+      window.addEventListener("beforeunload", function () {
+        const $previewImage = $("#preview-image");
+        const currentSrc = $previewImage.attr("src");
+        if (currentSrc && currentSrc.startsWith("blob:")) {
+          URL.revokeObjectURL(currentSrc);
+          console.log("페이지 종료 시 Object URL 해제됨:", currentSrc);
+        }
+      });
     </script>
   </body>
 </html>
