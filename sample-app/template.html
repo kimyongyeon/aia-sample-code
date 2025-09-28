@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <h1>template</h1>
+    <p>This is a template</p>
+    <script>
+      (function () {
+        "use strict";
+
+        console.log("template loaded");
+        console.log("전달받은 데이터:", window.responseData);
+
+        // responseData를 통해 API 접근
+        const api = window.responseData.api;
+
+        if (api && typeof api.getUser === "function") {
+          api
+            .getUser()
+            .then((res) => {
+              console.log("Template에서 API 호출 결과:", res);
+            })
+            .catch((error) => {
+              console.error("API 호출 실패:", error);
+            });
+        } else {
+          console.warn("API가 전달되지 않았습니다.");
+        }
+      })();
+    </script>
+  </body>
+</html>

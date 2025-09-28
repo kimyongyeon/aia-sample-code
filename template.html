@@ -24,5 +24,21 @@
         date: new Date().toLocaleDateString(),
       });
     });
+
+    // api.getUser 함수 호출 예제
+    if (window.api) {
+      window.api
+        .getUser()
+        .then((userData) => {
+          console.log("Template에서 API 호출 결과:", userData);
+          // 필요시 UI 업데이트
+          // document.querySelector("h1").textContent = `Hello, ${userData.name}!`;
+        })
+        .catch((error) => {
+          console.error("API 호출 실패:", error);
+        });
+    } else {
+      console.warn("API가 아직 로드되지 않았습니다.");
+    }
   })();
 </script>

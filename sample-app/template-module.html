@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Template with Module</title>
+  </head>
+  <body>
+    <h1>template with module import</h1>
+    <p>This is a template that imports modules directly</p>
+    <button id="load-user">사용자 정보 로드</button>
+    <div id="user-info"></div>
+
+    <script type="module">
+      import api from "./api.js";
+
+      (function () {
+        "use strict";
+
+        console.log("Template with module loaded");
+
+        // API 직접 호출
+        document
+          .querySelector("#load-user")
+          .addEventListener("click", async () => {
+            try {
+              const userData = await api.getUser();
+              console.log("모듈에서 직접 호출한 API 결과:", userData);
+
+              const userInfoDiv = document.querySelector("#user-info");
+              userInfoDiv.innerHTML = `
+              <h3>사용자 정보</h3>
+              <p><strong>이름:</strong> ${userData.name}</p>
+              <p><strong>나이:</strong> ${userData.age}</p>
+              <p><strong>이메일:</strong> ${userData.email}</p>
+            `;
+            } catch (error) {
+              console.error("API 호출 실패:", error);
+            }
+          });
+
+        // 페이지 로드 시 자동 호출
+        api.getUser().then((userData) => {
+          console.log("자동 로드된 사용자 데이터:", userData);
+        });
+      })();
+    </script>
+  </body>
+</html>

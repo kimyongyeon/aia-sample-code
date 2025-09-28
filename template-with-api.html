@@ -1,0 +1,86 @@
+<!-- template-with-api.html - API 호출 예제 -->
+
+<div>
+  <h1>Hello, name!</h1>
+  <p>This is a template loaded dynamically.</p>
+  <p>Current date: date</p>
+
+  <button id="next">next</button>
+  <button id="load-user">사용자 정보 로드</button>
+  <div id="user-info"></div>
+</div>
+
+<script>
+  (function () {
+    "use strict";
+
+    console.log(window.responseData);
+
+    const name = window.responseData.name;
+    const date = window.responseData.date;
+
+    document.querySelector("h1").textContent = `Hello, ${name}!`;
+    document.querySelector("p").textContent = `Current date: ${date}`;
+
+    document.querySelector("#next").addEventListener("click", () => {
+      loadComponent("root", "child.html", {
+        name: "Child",
+        date: new Date().toLocaleDateString(),
+      });
+    });
+
+    // API 호출 버튼 이벤트
+    document.querySelector("#load-user").addEventListener("click", async () => {
+      try {
+        if (window.api && typeof window.api.getUser === "function") {
+          const userData = await window.api.getUser();
+          console.log("Template에서 API 호출 결과:", userData);
+
+          // 사용자 정보 표시
+          const userInfoDiv = document.querySelector("#user-info");
+          userInfoDiv.innerHTML = `
+            <h3>사용자 정보</h3>
+            <p><strong>이름:</strong> ${userData.name}</p>
+            <p><strong>나이:</strong> ${userData.age}</p>
+            <p><strong>이메일:</strong> ${userData.email}</p>
+          `;
+        } else {
+          console.warn("API가 사용할 수 없습니다.");
+          alert("API를 사용할 수 없습니다.");
+        }
+      } catch (error) {
+        console.error("API 호출 실패:", error);
+        alert("API 호출에 실패했습니다.");
+      }
+    });
+
+    // 페이지 로드 시 자동으로 API 호출 (선택사항)
+    const loadUserDataOnInit = async () => {
+      // API가 로드될 때까지 잠시 대기
+      let retries = 0;
+      const maxRetries = 10;
+
+      const checkApi = async () => {
+        if (window.api && typeof window.api.getUser === "function") {
+          try {
+            const userData = await window.api.getUser();
+            console.log("자동 로드된 사용자 데이터:", userData);
+            // 필요시 UI 업데이트
+          } catch (error) {
+            console.error("자동 API 호출 실패:", error);
+          }
+        } else if (retries < maxRetries) {
+          retries++;
+          setTimeout(checkApi, 100); // 100ms 후 재시도
+        } else {
+          console.warn("API 로드 타임아웃");
+        }
+      };
+
+      checkApi();
+    };
+
+    // 초기화 시 API 호출 (주석 해제하면 자동 실행)
+    // loadUserDataOnInit();
+  })();
+</script>
