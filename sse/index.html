@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <script>
+      const userId = "user123";
+      const eventSource = new EventSource(
+        `http://localhost:8080/api/sse/subscribe?userId=${userId}`
+      );
+
+      eventSource.addEventListener("connected", (e) => {
+        console.log("SSE 연결됨:", e.data);
+        document.body.innerHTML = e.data + "," + userId;
+      });
+
+      eventSource.addEventListener("FORCE_LOGOUT", (e) => {
+        console.log("로그아웃 이벤트 수신:", e.data);
+        // 토큰 삭제 + 로그인 화면 이동
+        localStorage.removeItem("access_token");
+        window.location.href = "/";
+      });
+    </script>
+  </body>
+</html>
