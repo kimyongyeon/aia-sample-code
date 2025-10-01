@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <script>
+      // validationUtil.js
+      export const ValidationUtil = {
+        /**
+         * 공백/널 체크
+         * - null, undefined, 빈 문자열, 공백 문자열 모두 false
+         */
+        isNotEmpty(value) {
+          return (
+            value !== null && value !== undefined && String(value).trim() !== ""
+          );
+        },
+
+        /**
+         * 주민등록번호 유효성 체크
+         */
+        isValidJumin(jumin) {
+          if (!this.isNotEmpty(jumin)) return false;
+
+          const clean = jumin.replace(/-/g, "");
+          if (!/^\d{13}$/.test(clean)) return false;
+
+          // 생년월일 유효성
+          const birth = clean.substring(0, 6);
+          if (!this.isValidDate(this.convertBirthToDate(birth, clean[6])))
+            return false;
+
+          // 체크섬 검증
+          const weights = [2, 3, 4, 5, 6, 7, 8, 9, 2, 3, 4, 5];
+          const sum = weights.reduce(
+            (acc, w, i) => acc + parseInt(clean[i], 10) * w,
+            0
+          );
+          const checkDigit = (11 - (sum % 11)) % 10;
+
+          return checkDigit === parseInt(clean[12], 10);
+        },
+
+        /**
+         * 발급일자 유효성 체크
+         */
+        isValidIssueDate(issueDate) {
+          if (!this.isNotEmpty(issueDate)) return false;
+          if (!/^\d{8}$/.test(issueDate)) return false;
+
+          const year = parseInt(issueDate.substring(0, 4), 10);
+          const month = parseInt(issueDate.substring(4, 6), 10) - 1;
+          const day = parseInt(issueDate.substring(6, 8), 10);
+
+          const date = new Date(year, month, day);
+          if (
+            date.getFullYear() !== year ||
+            date.getMonth() !== month ||
+            date.getDate() !== day
+          ) {
+            return false;
+          }
+          return date <= new Date();
+        },
+
+        /**
+         * 내부 유틸: 생년월일 변환
+         */
+        convertBirthToDate(birth6, genderDigit) {
+          let century;
+          switch (parseInt(genderDigit, 10)) {
+            case 1:
+            case 2:
+              century = 1900;
+              break;
+            case 3:
+            case 4:
+              century = 2000;
+              break;
+            default:
+              return null;
+          }
+          const year = century + parseInt(birth6.substring(0, 2), 10);
+          const month = birth6.substring(2, 4);
+          const day = birth6.substring(4, 6);
+          return `${year}${month}${day}`;
+        },
+
+        /**
+         * 내부 유틸: 날짜 유효성
+         */
+        isValidDate(dateStr) {
+          if (!/^\d{8}$/.test(dateStr)) return false;
+          const y = parseInt(dateStr.substring(0, 4), 10);
+          const m = parseInt(dateStr.substring(4, 6), 10) - 1;
+          const d = parseInt(dateStr.substring(6, 8), 10);
+          const date = new Date(y, m, d);
+          return (
+            date.getFullYear() === y &&
+            date.getMonth() === m &&
+            date.getDate() === d
+          );
+        },
+
+        /**
+         * 에러 메시지 반환 방식 (객체 리턴)
+         */
+        validateInputs({ jumin, issueDate }) {
+          if (!this.isNotEmpty(jumin)) {
+            return {
+              valid: false,
+              reason: "주민등록번호가 입력되지 않았습니다.",
+            };
+          }
+          if (!this.isValidJumin(jumin)) {
+            return {
+              valid: false,
+              reason: "주민등록번호 형식이 올바르지 않습니다.",
+            };
+          }
+          if (!this.isNotEmpty(issueDate)) {
+            return { valid: false, reason: "발급일자가 입력되지 않았습니다." };
+          }
+          if (!this.isValidIssueDate(issueDate)) {
+            return {
+              valid: false,
+              reason: "발급일자 형식이 올바르지 않습니다.",
+            };
+          }
+          return { valid: true, reason: "정상" };
+        },
+      };
+    </script>
+
+    <script>
+      import { ValidationUtil } from "./validationUtil.js";
+
+      // 단순 boolean 체크
+      console.log(ValidationUtil.isNotEmpty("  ")); // false
+      console.log(ValidationUtil.isValidJumin("901010-1234567")); // true/false
+      console.log(ValidationUtil.isValidIssueDate("20241005")); // true
+
+      // 메시지 포함 결과
+      const result = ValidationUtil.validateInputs({
+        jumin: "901010-1234567",
+        issueDate: "20241005",
+      });
+      console.log(result);
+      // { valid: true, reason: "정상" }
+    </script>
+  </body>
+</html>
